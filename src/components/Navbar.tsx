@@ -54,7 +54,7 @@ const Navbar = () => {
             <img 
               src={logo} 
               alt="BrightMinds" 
-              className="h-14 w-auto group-hover:scale-105 transition-transform duration-300"
+              className="h-16 md:h-20 w-auto group-hover:scale-105 transition-transform duration-300"
             />
           </a>
 

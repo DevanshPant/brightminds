@@ -69,7 +69,7 @@ const Footer = () => {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span className="text-background/70">
-                  Ahmednagar<br />
+                  Ahilyanagar<br />
                   Maharashtra, India
                 </span>
               </li>
@@ -89,7 +89,7 @@ const Footer = () => {
           <div className="flex items-center gap-6 text-sm text-background/50">
             <span>Classes 7-10</span>
             <span className="w-1 h-1 rounded-full bg-primary" />
-            <span>Ahmednagar</span>
+            <span>Ahilyanagar</span>
             <span className="w-1 h-1 rounded-full bg-primary" />
             <span>India</span>
           </div>

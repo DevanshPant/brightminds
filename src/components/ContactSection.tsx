@@ -124,7 +124,7 @@ const ContactSection = () => {
     {
       icon: MapPin,
       label: 'Visit Us',
-      value: 'Ahmednagar',
+      value: 'Ahilyanagar',
       subtext: 'Maharashtra, India',
     },
     {
