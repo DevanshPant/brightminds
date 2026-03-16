@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
-import logo from '@/assets/logo.png';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -55,7 +54,7 @@ const Navbar = () => {
             className="flex items-center gap-3 group"
           >
             <img 
-              src={logo} 
+              src="/logoji.png" 
               alt="BrightMinds" 
               className="h-16 md:h-20 w-auto group-hover:scale-105 transition-transform duration-300"
             />
