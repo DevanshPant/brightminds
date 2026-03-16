@@ -14,20 +14,20 @@ const ProgramsSection = () => {
       color: 'primary',
     },
     {
-      icon: Shield,
-      title: 'Defense Orientation',
-      subtitle: 'NDA & TES Awareness',
-      description: 'Introduction to defense career paths with focus on preparing students mentally and physically for future entrance exams.',
-      features: ['Entrance Coaching', 'Officer interaction', 'Service insights', 'Veteran Guidance'],
-      color: 'primary',
-    },
-    {
       icon: Brain,
       title: 'Career Guidance',
       subtitle: 'Exposure Sessions',
       description: 'Early exposure to career options and various professional paths to help students make informed choices.',
       features: ['Career clarity', 'Expert interactions', 'Professional Direction', 'Personality Development'],
       color: 'accent',
+    },
+    {
+      icon: Shield,
+      title: 'Defense Orientation',
+      subtitle: 'NDA & TES Awareness',
+      description: 'Introduction to defense career paths with focus on preparing students mentally and physically for future entrance exams.',
+      features: ['Entrance Coaching', 'Officer interaction', 'Service insights', 'Veteran Guidance'],
+      color: 'primary',
     },
   ];
 
@@ -66,7 +66,7 @@ const ProgramsSection = () => {
         </div>
 
         {/* Programs Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {programs.map((program, index) => (
             <div
               key={program.title}
