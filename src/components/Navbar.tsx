@@ -21,6 +21,7 @@ const Navbar = () => {
     { name: 'Programs', href: '#programs' },
     { name: 'Why Us', href: '#why-us' },
     { name: 'Privacy Policy', href: '/privacy-policy' },
+    { name: 'Delete Account', href: '/delete-account' },
     { name: 'Contact', href: '#contact' },
   ];
 
