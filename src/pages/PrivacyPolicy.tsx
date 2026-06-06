@@ -145,8 +145,8 @@ const PrivacyPolicy = () => {
             <h2 className="text-3xl font-semibold mb-6 text-primary">11. Contact Us</h2>
             <p className="mb-4">If you have questions about this Privacy Policy or data practices, please contact us:</p>
             <ul className="list-disc pl-6 mb-4">
-              <li><strong>Email:</strong> <a href="mailto:hello@brightmindsclasses.in" className="text-primary hover:underline">hello@brightmindsclasses.in</a></li>
-              <li><strong>Support:</strong> <a href="mailto:hello@brightmindsclasses.in" className="text-primary hover:underline">hello@brightmindsclasses.in</a></li>
+              <li><strong>Email:</strong> <a href="mailto:support@brightmindsclasses.in" className="text-primary hover:underline">support@brightmindsclasses.in</a></li>
+              <li><strong>Support:</strong> <a href="mailto:support@brightmindsclasses.in" className="text-primary hover:underline">support@brightmindsclasses.in</a></li>
             </ul>
             <ul className="list-disc pl-6 mb-8">
               <li><strong>Company:</strong> Brightminds</li>
