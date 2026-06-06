@@ -86,7 +86,7 @@ These Terms of Use shall be governed by and construed in accordance with the law
 
 For questions about these Terms of Use, please contact us at:
 
-**Email:** support@brightmindsclasses.in  
+**Email:** hello@brightmindsclasses.in  
 **Website:** https://brightmindsclasses.in/#contact
 
 ---

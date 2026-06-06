@@ -86,7 +86,7 @@ const TermsOfUse = () => {
               For questions about these Terms of Use, please contact us at:
             </p>
             <ul className="list-disc pl-6 mb-8">
-              <li className="mb-3"><strong>Email:</strong> <a href="mailto:support@brightmindsclasses.in" className="text-primary hover:underline">support@brightmindsclasses.in</a></li>
+              <li className="mb-3"><strong>Email:</strong> <a href="mailto:hello@brightmindsclasses.in" className="text-primary hover:underline">hello@brightmindsclasses.in</a></li>
               <li className="mb-3"><strong>Website:</strong> <a href="https://brightmindsclasses.in/#contact" className="text-primary hover:underline">https://brightmindsclasses.in/#contact</a></li>
             </ul>
             
