@@ -1,0 +1,238 @@
+/**
+ * Exercises the serverless handlers end-to-end with mock req/res objects.
+ * No Firebase, Razorpay or Resend account required — these tests cover the
+ * guards that run BEFORE any external service is touched, which is exactly
+ * where a mistake would be most expensive.
+ *
+ *   npm run test:api
+ */
+import crypto from 'node:crypto';
+import assert from 'node:assert/strict';
+
+process.env.RAZORPAY_KEY_ID = 'rzp_test_dummy';
+process.env.RAZORPAY_KEY_SECRET = 'test_secret_abc123';
+process.env.RAZORPAY_WEBHOOK_SECRET = 'whsec_test_xyz789';
+process.env.RESEND_API_KEY = '';
+process.env.WHATSAPP_COMMUNITY_LINK = 'https://chat.whatsapp.com/TESTLINK123';
+
+const createOrder = (await import('../api/create-order.js')).default;
+const verifyPayment = (await import('../api/verify-payment.js')).default;
+const webhook = (await import('../api/razorpay-webhook.js')).default;
+const health = (await import('../api/health.js')).default;
+
+let passed = 0;
+let failed = 0;
+
+const test = async (name, fn) => {
+  try {
+    await fn();
+    passed += 1;
+    console.log(`  ✓ ${name}`);
+  } catch (error) {
+    failed += 1;
+    console.error(`  ✗ ${name}`);
+    console.error(`    ${error.message}`);
+  }
+};
+
+/** Minimal stand-in for the Vercel response object. */
+function mockRes() {
+  const res = {
+    statusCode: null,
+    body: null,
+    headers: {},
+    setHeader(key, value) {
+      this.headers[key] = value;
+    },
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(payload) {
+      this.body = payload;
+      return this;
+    },
+    end() {
+      return this;
+    },
+  };
+  return res;
+}
+
+const mockReq = (overrides = {}) => ({
+  method: 'POST',
+  headers: {},
+  body: {},
+  ...overrides,
+});
+
+const sign = (payload, secret) =>
+  crypto.createHmac('sha256', secret).update(payload).digest('hex');
+
+// Firebase Admin is deliberately unconfigured here, so any handler that reaches
+// it fails loudly. Silence the expected console noise.
+const originalError = console.error;
+console.error = () => {};
+
+console.log('\n/api/health');
+await test('reports configuration status without leaking secrets', async () => {
+  const res = mockRes();
+  await health(mockReq({ method: 'GET' }), res);
+  assert.equal(res.statusCode, 200);
+  assert.equal(res.body.status, 'ok');
+  assert.equal(res.body.configured.razorpayKeys, true);
+  assert.equal(res.body.configured.razorpayMode, 'test');
+  assert.equal(res.body.configured.whatsappLink, true);
+  assert.equal(res.body.configured.resend, false);
+  // No secret value may appear anywhere in the response.
+  assert.doesNotMatch(JSON.stringify(res.body), /test_secret_abc123|whsec_test_xyz789/);
+});
+
+console.log('\n/api/create-order');
+await test('rejects an unauthenticated request with 401', async () => {
+  const res = mockRes();
+  await createOrder(mockReq({ body: { courseId: 'nda-1-april-2027' } }), res);
+  assert.equal(res.statusCode, 401);
+  assert.match(res.body.error, /signed in/i);
+});
+
+await test('rejects a malformed Authorization header with 401', async () => {
+  const res = mockRes();
+  await createOrder(
+    mockReq({ headers: { authorization: 'Basic abc' }, body: { courseId: 'nda-1-april-2027' } }),
+    res,
+  );
+  assert.equal(res.statusCode, 401);
+});
+
+await test('rejects a GET with 405', async () => {
+  const res = mockRes();
+  await createOrder(mockReq({ method: 'GET' }), res);
+  assert.equal(res.statusCode, 405);
+  assert.equal(res.headers.Allow, 'POST');
+});
+
+await test('answers a CORS preflight without running the handler', async () => {
+  const res = mockRes();
+  await createOrder(
+    mockReq({ method: 'OPTIONS', headers: { origin: 'https://brightmindsclasses.in' } }),
+    res,
+  );
+  assert.equal(res.statusCode, 204);
+  assert.equal(res.headers['Access-Control-Allow-Origin'], 'https://brightmindsclasses.in');
+});
+
+console.log('\n/api/verify-payment');
+await test('rejects an unauthenticated request with 401', async () => {
+  const res = mockRes();
+  await verifyPayment(
+    mockReq({
+      body: {
+        razorpay_order_id: 'order_1',
+        razorpay_payment_id: 'pay_1',
+        razorpay_signature: 'sig',
+      },
+    }),
+    res,
+  );
+  assert.equal(res.statusCode, 401);
+});
+
+await test('never confirms a payment without a valid token', async () => {
+  // Even with a perfectly valid signature, no token means no enrolment.
+  const signature = sign('order_1|pay_1', process.env.RAZORPAY_KEY_SECRET);
+  const res = mockRes();
+  await verifyPayment(
+    mockReq({
+      body: {
+        razorpay_order_id: 'order_1',
+        razorpay_payment_id: 'pay_1',
+        razorpay_signature: signature,
+      },
+    }),
+    res,
+  );
+  assert.equal(res.statusCode, 401);
+  assert.notEqual(res.body.success, true);
+});
+
+console.log('\n/api/razorpay-webhook');
+await test('rejects a missing signature with 401', async () => {
+  const res = mockRes();
+  await webhook(mockReq({ body: Buffer.from('{"event":"payment.captured"}') }), res);
+  assert.equal(res.statusCode, 401);
+  assert.match(res.body.error, /signature/i);
+});
+
+await test('rejects a forged signature with 401', async () => {
+  const rawBody = '{"event":"payment.captured"}';
+  const res = mockRes();
+  await webhook(
+    mockReq({
+      headers: { 'x-razorpay-signature': sign(rawBody, 'attacker_secret') },
+      body: Buffer.from(rawBody),
+    }),
+    res,
+  );
+  assert.equal(res.statusCode, 401);
+});
+
+await test('rejects a body altered after signing with 401', async () => {
+  const signed = '{"event":"payment.captured","amount":50000}';
+  const tampered = '{"event":"payment.captured","amount":1}';
+  const res = mockRes();
+  await webhook(
+    mockReq({
+      headers: { 'x-razorpay-signature': sign(signed, process.env.RAZORPAY_WEBHOOK_SECRET) },
+      body: Buffer.from(tampered),
+    }),
+    res,
+  );
+  assert.equal(res.statusCode, 401);
+});
+
+await test('rejects a GET with 405', async () => {
+  const res = mockRes();
+  await webhook(mockReq({ method: 'GET' }), res);
+  assert.equal(res.statusCode, 405);
+});
+
+await test('a valid signature gets past auth and reaches processing', async () => {
+  // Firebase Admin is unconfigured in this test run, so a correctly signed
+  // webhook must fail at the database step (500), never at the signature step.
+  const rawBody = JSON.stringify({
+    event: 'payment.captured',
+    payload: { payment: { entity: { id: 'pay_1', order_id: 'order_1' } } },
+  });
+  const res = mockRes();
+  await webhook(
+    mockReq({
+      headers: {
+        'x-razorpay-signature': sign(rawBody, process.env.RAZORPAY_WEBHOOK_SECRET),
+        'x-razorpay-event-id': 'evt_test_1',
+      },
+      body: Buffer.from(rawBody),
+    }),
+    res,
+  );
+  assert.equal(res.statusCode, 500);
+  assert.notEqual(res.statusCode, 401);
+});
+
+await test('malformed JSON with a valid signature is a 400, not a crash', async () => {
+  const rawBody = 'not json at all';
+  const res = mockRes();
+  await webhook(
+    mockReq({
+      headers: { 'x-razorpay-signature': sign(rawBody, process.env.RAZORPAY_WEBHOOK_SECRET) },
+      body: Buffer.from(rawBody),
+    }),
+    res,
+  );
+  assert.equal(res.statusCode, 400);
+});
+
+console.error = originalError;
+
+console.log(`\n${failed === 0 ? '✓' : '✗'} ${passed} passed, ${failed} failed\n`);
+process.exit(failed === 0 ? 0 : 1);

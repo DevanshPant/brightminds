@@ -3,11 +3,18 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ScrollToHash from "@/components/ScrollToHash";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfUse from "./pages/TermsOfUse";
 import DeleteAccount from "./pages/DeleteAccount";
+import CoursePage from "./pages/CoursePage";
+import Login from "./pages/Login";
+import Dashboard from "./pages/Dashboard";
+import Admin from "./pages/Admin";
 
 const queryClient = new QueryClient();
 
@@ -17,22 +24,43 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-of-use" element={<TermsOfUse />} />
-          <Route path="/delete-account" element={<DeleteAccount />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <ScrollToHash />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/courses/:slug" element={<CoursePage />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <Admin />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-use" element={<TermsOfUse />} />
+            <Route path="/delete-account" element={<DeleteAccount />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
-      
+
       {/* Floating WhatsApp Button */}
       <a
         href="https://wa.me/message/7CRC4CCXAPVSI1"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 bg-green-500 hover:bg-green-600 text-white p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+        className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 bg-green-500 hover:bg-green-600 text-white p-3.5 sm:p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
         aria-label="Contact us on WhatsApp"
       >
         <svg

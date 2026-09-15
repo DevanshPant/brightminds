@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files - never commit real keys
+.env
+.env.*
+!.env.example
+server/.env
+
+# Firebase service account keys
+*serviceAccount*.json
+firebase-adminsdk*.json
+
+# Vercel
+.vercel
+.firebase/
+firebase-debug.log
+firestore-debug.log

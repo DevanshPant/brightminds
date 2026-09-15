@@ -1,0 +1,80 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  BrightMinds — Firestore security rules
+//
+//  Principle: the browser can only ever READ its own data. Everything that
+//  represents money (orders, enrolments, receipt counters) is written solely by
+//  the Firebase Admin SDK from the serverless functions, which bypasses these
+//  rules. That means a student cannot forge an enrolment from the console.
+//
+//  Deploy:  firebase deploy --only firestore:rules
+//  Or paste into Firebase console → Firestore Database → Rules → Publish.
+// ─────────────────────────────────────────────────────────────────────────────
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ⚠ EDIT THIS: the email addresses allowed to open /admin.
+    //    Keep it identical to VITE_ADMIN_EMAILS in your .env file.
+    function adminEmails() {
+      return [
+        'khannaamar001@gmail.com',
+        'hello@brightmindsclasses.in'
+      ];
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in adminEmails();
+    }
+
+    function isOwner(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Student profiles — a student may create and update only their own, and
+    // only the profile fields (no role/admin escalation).
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.keys().hasOnly(
+             ['uid', 'email', 'displayName', 'photoURL', 'lastLoginAt', 'phone']
+           );
+      allow delete: if false;
+    }
+
+    // Enrolments — readable by their owner, written only by the server.
+    match /enrollments/{enrollmentId} {
+      allow read: if isSignedIn()
+        && (resource.data.uid == request.auth.uid || isAdmin());
+      allow write: if false;
+    }
+
+    // Orders, receipt counters and webhook bookkeeping are server-only.
+    match /orders/{orderId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    match /counters/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /webhookEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    // Anything not listed above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
