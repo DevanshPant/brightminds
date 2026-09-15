@@ -15,7 +15,10 @@
     "test:api": "node scripts/test-api-handlers.mjs",
     "check:firebase": "node scripts/check-firebase.mjs",
     "firebase:deploy": "npx -y firebase-tools@latest deploy --only firestore:rules,firestore:indexes",
-    "firebase:login": "npx -y firebase-tools@latest login"
+    "firebase:login": "npx -y firebase-tools@latest login",
+    "check:deploy": "node scripts/check-firestore-deploy.mjs",
+    "deploy:indexes": "node scripts/deploy-indexes.mjs",
+    "test:auth": "node scripts/test-auth-rules.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
