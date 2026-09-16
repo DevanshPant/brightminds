@@ -38,9 +38,9 @@ export const COURSES: Course[] = [
     title: 'NDA-1 April 2027',
     heading: 'Your Journey to the Academy Starts Here.',
     tagline: 'New Batch',
-    subtitle: 'Complete written + SSB preparation for the UPSC NDA & NA Examination (I), April 2027',
+    subtitle: 'Complete written and SSB preparation for the UPSC NDA & NA Examination',
     description:
-      'A structured, mentor-led batch built around one target: the UPSC NDA & NA Examination (I) in April 2027. Mathematics and the General Ability Test are taught from the ground up against the official UPSC syllabus, with regular full-length mocks. Alongside the written paper, you are prepared for what most aspirants ignore until it is too late — the SSB interview, and the physical and medical standards. Taught by mentors who include serving and veteran officers.',
+      'Six months of structured, mentor-led coaching covering the complete UPSC NDA syllabus. Mathematics and the General Ability Test are taught from the ground up against the official syllabus, with regular full-length mocks. Alongside the written paper, you are prepared for what most aspirants ignore until it is too late — the SSB interview, and the physical and medical standards. Taught by mentors who include serving and veteran officers.',
     price: 499,
     originalPrice: 1500,
     duration: '6 months of live coaching',
@@ -122,16 +122,16 @@ export const COURSES: Course[] = [
     ],
     faqs: [
       {
-        q: 'Who can apply for NDA-1 2027?',
-        a: 'Unmarried candidates who have passed or are appearing for Class 12 (10+2). Candidates for the Air Force, Naval Academy and the Naval wing must have studied Physics, Chemistry and Mathematics in Class 12; the Army wing is open to any stream. UPSC publishes the exact age and date-of-birth window in the official notification — please confirm your eligibility there before applying.',
+        q: 'Who can apply for the NDA?',
+        a: 'Unmarried candidates who have passed or are appearing for Class 12 (10+2). Candidates for the Air Force, Naval Academy and the Naval wing must have studied Physics, Chemistry and Mathematics in Class 12; the Army wing is open to any stream. UPSC publishes the exact age and date-of-birth window in each official notification — please confirm your eligibility there before applying.',
       },
       {
         q: 'What is the exam pattern?',
         a: 'Two written papers: Mathematics (300 marks) and the General Ability Test (600 marks — English 200, General Knowledge 400), for a written total of 900 marks. There is negative marking. Candidates who clear the written paper go on to the SSB interview, which also carries 900 marks.',
       },
       {
-        q: 'When is the NDA-1 2027 exam?',
-        a: 'UPSC normally issues the NDA & NA (I) notification in December and holds the written exam in April. Treat April 2027 as the target and confirm the exact dates from the official UPSC notification when it is released — we share every update in the WhatsApp community as soon as it is announced.',
+        q: 'Which exam sitting will I appear for?',
+        a: 'UPSC conducts the NDA examination twice a year — NDA (I) is normally written in April and NDA (II) around September. Your mentor helps you decide which sitting to target based on your class, your syllabus coverage and your readiness. Exact dates always come from the official UPSC notification, and we share every update in the WhatsApp community as soon as it is announced.'
       },
       {
         q: 'Is ₹499 the full fee?',
