@@ -8,6 +8,7 @@ import {
   MessageCircle,
   ShieldCheck,
   Lock,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button, type ButtonProps } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -50,6 +51,7 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
   const [phone, setPhone] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [success, setSuccess] = useState<VerifyPaymentResponse | null>(null);
+  const [unconfirmed, setUnconfirmed] = useState<{ paymentId: string; orderId: string; message: string } | null>(null);
 
   const alreadyEnrolled = Boolean(user) && isEnrolledIn(course.id);
   const busy = isProcessing || authLoading || (Boolean(user) && enrollmentsLoading);
@@ -99,6 +101,8 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
         onFailure: (message) => {
           toast({ variant: 'destructive', title: 'Payment not completed', description: message });
         },
+        // Money taken, enrolment unconfirmed. Too serious for a toast.
+        onUnconfirmed: (details) => setUnconfirmed(details),
       });
     } catch (error) {
       toast({
@@ -206,6 +210,63 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
             <p className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
               <ShieldCheck className="w-4 h-4 text-primary" />
               Payments secured by Razorpay · UPI, cards, net banking
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Paid, but we could not confirm it — the student needs their payment ID */}
+      <Dialog open={Boolean(unconfirmed)} onOpenChange={(open) => !open && setUnconfirmed(null)}>
+        <DialogContent className="sm:max-w-md rounded-3xl border-amber-300 bg-amber-50">
+          <DialogHeader className="text-center sm:text-center">
+            <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
+              <AlertTriangle className="w-9 h-9 text-amber-600" />
+            </div>
+            <DialogTitle className="font-display text-2xl">Your payment went through</DialogTitle>
+            <DialogDescription className="text-base leading-relaxed">
+              We could not confirm your enrolment automatically. <strong>Your money is safe</strong> and
+              we will sort this out — please send us the reference below.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-1">
+            <div className="rounded-2xl border border-amber-200 bg-background/80 p-4 space-y-2">
+              <div className="text-xs uppercase tracking-wide text-muted-foreground">Payment reference</div>
+              <code className="block text-sm font-mono break-all text-foreground">
+                {unconfirmed?.paymentId}
+              </code>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard?.writeText(unconfirmed?.paymentId || '');
+                  toast({ title: 'Copied', description: 'Payment reference copied.' });
+                }}
+                className="text-xs underline underline-offset-4 text-muted-foreground hover:text-foreground"
+              >
+                Copy reference
+              </button>
+            </div>
+
+            <Button variant="hero" size="lg" className="w-full" asChild>
+              <a href={`mailto:hello@brightmindsclasses.in?subject=Payment%20not%20confirmed%20-%20${unconfirmed?.paymentId}&body=My%20payment%20reference%20is%20${unconfirmed?.paymentId}`}>
+                Email us about this
+              </a>
+            </Button>
+
+            <Button
+              variant="heroOutline"
+              size="lg"
+              className="w-full"
+              onClick={() => {
+                setUnconfirmed(null);
+                navigate('/dashboard');
+              }}
+            >
+              Check my dashboard
+            </Button>
+
+            <p className="text-xs text-muted-foreground text-center leading-relaxed">
+              Enrolments usually appear within a minute. Please do not pay again.
             </p>
           </div>
         </DialogContent>

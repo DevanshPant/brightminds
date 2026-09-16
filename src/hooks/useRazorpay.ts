@@ -78,6 +78,8 @@ type StartCheckoutArgs = {
   phone?: string;
   onSuccess: (result: VerifyPaymentResponse) => void;
   onFailure: (message: string) => void;
+  /** Money taken but the enrolment could not be confirmed — the worst case. */
+  onUnconfirmed?: (details: { paymentId: string; orderId: string; message: string }) => void;
   onDismiss?: () => void;
 };
 
@@ -85,7 +87,7 @@ export const useRazorpay = () => {
   const [isProcessing, setIsProcessing] = useState(false);
 
   const startCheckout = useCallback(async (args: StartCheckoutArgs) => {
-    const { courseId, token, name, email, phone, onSuccess, onFailure, onDismiss } = args;
+    const { courseId, token, name, email, phone, onSuccess, onFailure, onUnconfirmed, onDismiss } = args;
     setIsProcessing(true);
 
     try {
@@ -135,12 +137,21 @@ export const useRazorpay = () => {
             );
             onSuccess(verified);
           } catch (error) {
-            onFailure(
-              getErrorMessage(
-                error,
-                'Your payment went through but we could not confirm it. Please contact us with your payment ID.',
-              ),
+            // The student has paid. Do not let this disappear in a toast, and
+            // always show the payment ID they will need to quote.
+            const message = getErrorMessage(
+              error,
+              'Your payment went through but we could not confirm your enrolment.',
             );
+            if (onUnconfirmed) {
+              onUnconfirmed({
+                paymentId: response.razorpay_payment_id,
+                orderId: response.razorpay_order_id,
+                message,
+              });
+            } else {
+              onFailure(`${message} Payment ID: ${response.razorpay_payment_id}`);
+            }
           } finally {
             setIsProcessing(false);
           }
