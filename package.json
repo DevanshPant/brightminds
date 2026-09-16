@@ -19,7 +19,8 @@
     "check:deploy": "node scripts/check-firestore-deploy.mjs",
     "deploy:indexes": "node scripts/deploy-indexes.mjs",
     "test:auth": "node scripts/test-auth-rules.mjs",
-    "backfill:users": "node scripts/backfill-users.mjs"
+    "backfill:users": "node scripts/backfill-users.mjs",
+    "check:email": "node scripts/check-email.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
