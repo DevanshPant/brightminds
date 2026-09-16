@@ -22,7 +22,8 @@
     "backfill:users": "node scripts/backfill-users.mjs",
     "check:email": "node scripts/check-email.mjs",
     "send:whatsapp-link": "node scripts/send-whatsapp-link.mjs",
-    "check:api": "node scripts/check-api-syntax.mjs"
+    "check:api": "node scripts/check-api-syntax.mjs",
+    "reset:data": "node scripts/reset-test-data.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

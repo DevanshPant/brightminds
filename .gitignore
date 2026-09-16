@@ -38,3 +38,6 @@ firebase-adminsdk*.json
 .firebase/
 firebase-debug.log
 firestore-debug.log
+
+# Local database backups (may contain student personal data)
+backups/
