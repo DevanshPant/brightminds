@@ -19,6 +19,7 @@ const ok = (m) => console.log(`  ${G}OK${X}   ${m}`);
 const warn = (m) => console.log(`  ${Y}WARN${X} ${m}`);
 
 let problems = 0;
+let needsSendTest = false;
 const fail = (m, hint) => {
   problems += 1;
   console.log(`  ${R}FAIL${X} ${m}`);
@@ -86,7 +87,13 @@ if (apiKey?.startsWith('re_') && fromDomain) {
     });
 
     if (res.status === 401 || res.status === 403) {
-      fail('Resend rejected the API key.', 'It may have been revoked. Create a new one.');
+      // A "Sending access" key — the permission level we recommend — is not
+      // allowed to list domains. That is not a broken key, so do not cry wolf:
+      // the only conclusive test for a send-only key is an actual send.
+      warn('This key cannot list domains, which is normal for a "Sending access" key.');
+      console.log(`${D}       Cannot confirm "${fromDomain}" is verified this way.${X}`);
+      console.log(`${D}       Test it for real:  npm run check:email -- --send${X}`);
+      needsSendTest = true;
     } else if (!res.ok) {
       warn(`Resend returned ${res.status} listing domains; skipping this check.`);
     } else {
