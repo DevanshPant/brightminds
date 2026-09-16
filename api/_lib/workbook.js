@@ -86,7 +86,7 @@ export async function buildEnrolmentWorkbook() {
   for (const s of rows) {
     const e = byUid.get(s.uid);
     sheet.addRow({
-      name: s.displayName || e?.studentName || '',
+      name: s.fullName || s.displayName || e?.studentName || '',
       email: s.email || e?.email || '',
       phone: s.phone || e?.phone || '',
       status: e ? 'Enrolled' : 'Signed up',

@@ -25,8 +25,10 @@ export default async function handler(req, res) {
     return fail(res, error.status || 401, error.message, error.cause);
   }
 
-  const { phone } = parseJsonBody(req);
+  const { phone, fullName } = parseJsonBody(req);
   const cleanPhone = typeof phone === 'string' ? phone.replace(/[^\d+]/g, '').slice(0, 15) : '';
+  // The student can correct the name Google gave us.
+  const cleanName = typeof fullName === 'string' ? fullName.trim().slice(0, 80) : '';
 
   try {
     const db = adminDb();
@@ -50,6 +52,8 @@ export default async function handler(req, res) {
         signupAt: existing?.signupAt || now,
         updatedAt: FieldValue.serverTimestamp(),
       };
+      if (cleanName) next.fullName = cleanName;
+      else if (existing?.fullName) next.fullName = existing.fullName;
       if (cleanPhone) next.phone = cleanPhone;
       else if (existing?.phone) next.phone = existing.phone;
 

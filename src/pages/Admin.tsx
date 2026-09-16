@@ -80,7 +80,7 @@ const Admin = () => {
 
   const filteredStudents = useMemo(
     () => (!term ? students : students.filter((s) =>
-      matches(term, [s.displayName, s.email, s.phone]))),
+      matches(term, [s.fullName, s.displayName, s.email, s.phone]))),
     [students, term],
   );
 
@@ -274,7 +274,7 @@ const Admin = () => {
                           return (
                             <tr key={s.uid} className="border-t border-primary/10">
                               <td className="px-4 py-3">
-                                <div className="font-medium text-foreground">{s.displayName || '—'}</div>
+                                <div className="font-medium text-foreground">{s.fullName || s.displayName || '—'}</div>
                                 <div className="text-xs text-muted-foreground break-all">{s.email}</div>
                               </td>
                               <td className="px-4 py-3 whitespace-nowrap">{s.phone || '—'}</td>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight,
@@ -22,6 +22,7 @@ import {
 import AuthDialog from '@/components/AuthDialog';
 import { useAuth } from '@/contexts/auth-context';
 import { useEnrollments } from '@/hooks/useEnrollments';
+import { useProfile } from '@/hooks/useProfile';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { useToast } from '@/hooks/use-toast';
 import { formatINR, WHATSAPP_COMMUNITY_LINK, type Course } from '@/config/course';
@@ -41,6 +42,7 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
   const { toast } = useToast();
   const { user, loading: authLoading, getToken } = useAuth();
   const { isEnrolledIn, loading: enrollmentsLoading } = useEnrollments();
+  const { profile } = useProfile();
   const { startCheckout, isProcessing } = useRazorpay();
 
   const [authOpen, setAuthOpen] = useState(false);
@@ -51,6 +53,11 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
 
   const alreadyEnrolled = Boolean(user) && isEnrolledIn(course.id);
   const busy = isProcessing || authLoading || (Boolean(user) && enrollmentsLoading);
+
+  // Reuse the number captured at sign-in rather than asking for it twice.
+  useEffect(() => {
+    if (profile?.phone) setPhone((current) => current || String(profile.phone).slice(-10));
+  }, [profile]);
 
   const handleClick = () => {
     if (alreadyEnrolled) {

@@ -6,6 +6,7 @@ export type Student = {
   uid: string;
   email: string | null;
   displayName: string | null;
+  fullName?: string | null;
   photoURL: string | null;
   phone?: string | null;
   emailVerified?: boolean;

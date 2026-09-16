@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ScrollToHash from "@/components/ScrollToHash";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import CompleteProfileDialog from "@/components/CompleteProfileDialog";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -26,6 +27,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <ScrollToHash />
+          <CompleteProfileDialog />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/courses/:slug" element={<CoursePage />} />
