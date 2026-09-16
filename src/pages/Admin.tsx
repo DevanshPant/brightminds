@@ -1,12 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { collection, limit, onSnapshot, orderBy, query } from 'firebase/firestore';
-import { AlertCircle, Download, IndianRupee, Loader2, Search, Users } from 'lucide-react';
+import {
+  AlertCircle, FileSpreadsheet, IndianRupee, Loader2, Search, TrendingUp, UserCheck, Users,
+} from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/contexts/auth-context';
+import { useStudents } from '@/hooks/useStudents';
+import { downloadStudentWorkbook } from '@/lib/downloadExport';
+import { useToast } from '@/hooks/use-toast';
 import { formatINR } from '@/config/course';
 import type { Enrollment } from '@/hooks/useEnrollments';
 
@@ -23,28 +29,17 @@ const formatDate = (value?: string) => {
   return date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'short', timeStyle: 'short' });
 };
 
-const toCsv = (rows: Enrollment[]) => {
-  const headers = [
-    'Receipt No', 'Name', 'Email', 'Phone', 'Course', 'Amount', 'Payment ID', 'Order ID', 'Paid At',
-  ];
-  const escape = (value: unknown) => `"${String(value ?? '').replace(/"/g, '""')}"`;
-  const lines = rows.map((row) =>
-    [
-      row.receiptNo, row.studentName, row.email, row.phone, row.courseTitle,
-      row.amount, row.razorpayPaymentId, row.razorpayOrderId, row.paidAt,
-    ].map(escape).join(','),
-  );
-  return [headers.map(escape).join(','), ...lines].join('\n');
-};
-
 const Admin = () => {
-  const { user } = useAuth();
+  const { user, getToken } = useAuth();
+  const { toast } = useToast();
   const [rows, setRows] = useState<Enrollment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   const isAdmin = Boolean(user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase()));
+  const { students, loading: studentsLoading, error: studentsError } = useStudents(isAdmin);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -55,8 +50,7 @@ const Admin = () => {
       setLoading(false);
       return;
     }
-
-    const q = query(collection(db, 'enrollments'), orderBy('paidAt', 'desc'), limit(500));
+    const q = query(collection(db, 'enrollments'), orderBy('paidAt', 'desc'), limit(1000));
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
@@ -73,29 +67,48 @@ const Admin = () => {
     return unsubscribe;
   }, [isAdmin]);
 
-  const filtered = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return rows;
-    return rows.filter((row) =>
-      [row.studentName, row.email, row.phone, row.receiptNo, row.razorpayPaymentId]
-        .filter(Boolean)
-        .some((field) => String(field).toLowerCase().includes(term)),
-    );
-  }, [rows, search]);
+  const matches = (term: string, fields: (string | number | null | undefined)[]) =>
+    fields.filter(Boolean).some((f) => String(f).toLowerCase().includes(term));
 
-  const revenue = useMemo(
-    () => filtered.reduce((sum, row) => sum + (Number(row.amount) || 0), 0),
-    [filtered],
+  const term = search.trim().toLowerCase();
+
+  const filteredEnrolments = useMemo(
+    () => (!term ? rows : rows.filter((r) =>
+      matches(term, [r.studentName, r.email, r.phone, r.receiptNo, r.razorpayPaymentId]))),
+    [rows, term],
   );
 
-  const downloadCsv = () => {
-    const blob = new Blob([toCsv(filtered)], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `brightminds-enrolments-${new Date().toISOString().slice(0, 10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const filteredStudents = useMemo(
+    () => (!term ? students : students.filter((s) =>
+      matches(term, [s.displayName, s.email, s.phone]))),
+    [students, term],
+  );
+
+  const paid = useMemo(() => rows.filter((r) => r.status === 'paid'), [rows]);
+  const revenue = useMemo(() => paid.reduce((sum, r) => sum + (Number(r.amount) || 0), 0), [paid]);
+  const enrolledUids = useMemo(() => new Set(paid.map((r) => r.uid)), [paid]);
+  const conversion = students.length
+    ? `${((enrolledUids.size / students.length) * 100).toFixed(0)}%`
+    : '—';
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const token = await getToken();
+      const filename = await downloadStudentWorkbook(token);
+      toast({
+        title: 'Excel file downloaded',
+        description: filename,
+      });
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not download the Excel file',
+        description: err instanceof Error ? err.message : 'Please try again.',
+      });
+    } finally {
+      setExporting(false);
+    }
   };
 
   if (!isAdmin) {
@@ -119,109 +132,172 @@ const Admin = () => {
     );
   }
 
+  const stats = [
+    { icon: Users, label: 'Registered', value: String(students.length), hint: 'signed in at least once' },
+    { icon: UserCheck, label: 'Enrolled', value: String(enrolledUids.size), hint: 'completed payment' },
+    { icon: TrendingUp, label: 'Conversion', value: conversion, hint: 'signup to paid' },
+    { icon: IndianRupee, label: 'Collected', value: formatINR(revenue), hint: 'total received' },
+  ];
+
+  const anyError = error || studentsError;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       <main className="flex-1 pt-28 sm:pt-32 pb-16 sm:pb-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-2">
-            Enrolments
-          </h1>
-          <p className="text-muted-foreground mb-8">Live feed of every completed payment.</p>
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+            <div>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground mb-1">
+                Students
+              </h1>
+              <p className="text-muted-foreground">Live view of every signup and payment.</p>
+            </div>
+            <Button
+              variant="hero"
+              onClick={handleExport}
+              disabled={exporting || (loading && studentsLoading)}
+              className="w-full sm:w-auto shrink-0"
+            >
+              {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSpreadsheet className="w-4 h-4" />}
+              {exporting ? 'Building…' : 'Download Excel'}
+            </Button>
+          </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-            {[
-              { icon: Users, label: 'Students enrolled', value: String(filtered.length) },
-              { icon: IndianRupee, label: 'Total collected', value: formatINR(revenue) },
-            ].map(({ icon: Icon, label, value }) => (
-              <div
-                key={label}
-                className="flex items-center gap-4 rounded-3xl border border-primary/10 bg-gradient-golden p-5"
-              >
-                <div className="w-12 h-12 rounded-2xl bg-background flex items-center justify-center shrink-0">
-                  <Icon className="w-5 h-5 text-primary" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
+            {stats.map(({ icon: Icon, label, value, hint }) => (
+              <div key={label} className="rounded-3xl border border-primary/10 bg-gradient-golden p-4 sm:p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="w-4 h-4 text-primary shrink-0" />
+                  <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
                 </div>
-                <div>
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-                  <div className="font-display text-2xl font-bold text-foreground">{value}</div>
+                <div className="font-display text-2xl sm:text-3xl font-bold text-foreground leading-none mb-1">
+                  {value}
                 </div>
+                <div className="text-xs text-muted-foreground">{hint}</div>
               </div>
             ))}
           </div>
 
-          {/* Controls */}
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search name, email, phone or receipt no."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="h-11 pl-10"
-              />
-            </div>
-            <Button variant="heroOutline" onClick={downloadCsv} disabled={filtered.length === 0}>
-              <Download className="w-4 h-4" />
-              Export CSV
-            </Button>
+          {/* Search */}
+          <div className="relative mb-6">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search name, email, phone or receipt no."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-11 pl-10"
+            />
           </div>
 
-          {/* Table */}
-          {loading ? (
-            <div className="flex items-center gap-3 rounded-3xl border border-primary/10 bg-card p-8 text-muted-foreground">
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Loading enrolments…
-            </div>
-          ) : error ? (
-            <div className="flex items-start gap-3 rounded-3xl border border-destructive/20 bg-destructive/5 p-6 text-sm text-muted-foreground">
+          {anyError && (
+            <div className="flex items-start gap-3 rounded-3xl border border-destructive/20 bg-destructive/5 p-6 text-sm text-muted-foreground mb-6">
               <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-              {error}
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="rounded-3xl border border-primary/10 bg-card p-10 text-center text-muted-foreground">
-              No enrolments yet.
-            </div>
-          ) : (
-            <div className="rounded-3xl border border-primary/10 bg-card overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm min-w-[720px]">
-                  <thead>
-                    <tr className="bg-secondary/60 text-left">
-                      {['Receipt', 'Student', 'Contact', 'Course', 'Amount', 'Paid'].map((header) => (
-                        <th
-                          key={header}
-                          className="px-4 py-3 font-semibold text-foreground whitespace-nowrap"
-                        >
-                          {header}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((row) => (
-                      <tr key={row.enrollmentId} className="border-t border-primary/10">
-                        <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{row.receiptNo}</td>
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-foreground">{row.studentName || '—'}</div>
-                          <div className="text-xs text-muted-foreground break-all">{row.email}</div>
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">{row.phone || '—'}</td>
-                        <td className="px-4 py-3">{row.courseTitle}</td>
-                        <td className="px-4 py-3 font-semibold whitespace-nowrap">
-                          {formatINR(row.amount)}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                          {formatDate(row.paidAt)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {anyError}
             </div>
           )}
+
+          <Tabs defaultValue="enrolments">
+            <TabsList className="mb-5">
+              <TabsTrigger value="enrolments">Enrolments ({filteredEnrolments.length})</TabsTrigger>
+              <TabsTrigger value="students">All students ({filteredStudents.length})</TabsTrigger>
+            </TabsList>
+
+            {/* Paid enrolments */}
+            <TabsContent value="enrolments">
+              {loading ? (
+                <div className="flex items-center gap-3 rounded-3xl border border-primary/10 bg-card p-8 text-muted-foreground">
+                  <Loader2 className="w-5 h-5 animate-spin" /> Loading enrolments…
+                </div>
+              ) : filteredEnrolments.length === 0 ? (
+                <div className="rounded-3xl border border-primary/10 bg-card p-10 text-center text-muted-foreground">
+                  No enrolments yet.
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-primary/10 bg-card overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[760px]">
+                      <thead>
+                        <tr className="bg-secondary/60 text-left">
+                          {['Receipt', 'Student', 'Contact', 'Course', 'Amount', 'Paid'].map((h) => (
+                            <th key={h} className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredEnrolments.map((row) => (
+                          <tr key={row.enrollmentId} className="border-t border-primary/10">
+                            <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{row.receiptNo}</td>
+                            <td className="px-4 py-3">
+                              <div className="font-medium text-foreground">{row.studentName || '—'}</div>
+                              <div className="text-xs text-muted-foreground break-all">{row.email}</div>
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap">{row.phone || '—'}</td>
+                            <td className="px-4 py-3">{row.courseTitle}</td>
+                            <td className="px-4 py-3 font-semibold whitespace-nowrap">{formatINR(row.amount)}</td>
+                            <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(row.paidAt)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Everyone who signed in */}
+            <TabsContent value="students">
+              {studentsLoading ? (
+                <div className="flex items-center gap-3 rounded-3xl border border-primary/10 bg-card p-8 text-muted-foreground">
+                  <Loader2 className="w-5 h-5 animate-spin" /> Loading students…
+                </div>
+              ) : filteredStudents.length === 0 ? (
+                <div className="rounded-3xl border border-primary/10 bg-card p-10 text-center text-muted-foreground">
+                  No students have signed in yet.
+                </div>
+              ) : (
+                <div className="rounded-3xl border border-primary/10 bg-card overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm min-w-[760px]">
+                      <thead>
+                        <tr className="bg-secondary/60 text-left">
+                          {['Student', 'Phone', 'Status', 'Signed up', 'Last login', 'Logins'].map((h) => (
+                            <th key={h} className="px-4 py-3 font-semibold text-foreground whitespace-nowrap">{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredStudents.map((s) => {
+                          const enrolled = enrolledUids.has(s.uid);
+                          return (
+                            <tr key={s.uid} className="border-t border-primary/10">
+                              <td className="px-4 py-3">
+                                <div className="font-medium text-foreground">{s.displayName || '—'}</div>
+                                <div className="text-xs text-muted-foreground break-all">{s.email}</div>
+                              </td>
+                              <td className="px-4 py-3 whitespace-nowrap">{s.phone || '—'}</td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                                  enrolled ? 'bg-green-100 text-green-700' : 'bg-secondary text-muted-foreground'
+                                }`}>
+                                  {enrolled ? 'Enrolled' : 'Signed up'}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(s.signupAt)}</td>
+                              <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(s.lastLoginAt)}</td>
+                              <td className="px-4 py-3 whitespace-nowrap">{s.loginCount ?? '—'}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
 

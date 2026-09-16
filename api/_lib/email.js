@@ -152,12 +152,27 @@ export function buildReceiptEmail(enrollment) {
 }
 
 /** Internal notification so the admin sees every enrolment immediately. */
-export function buildAdminEmail(enrollment) {
+export function buildAdminEmail(enrollment, workbookStats) {
+  const totals = workbookStats
+    ? `
+    <div style="margin:0 0 20px;padding:14px 16px;background:${BRAND.cream};border:1px solid ${BRAND.border};border-radius:14px;">
+      <div style="font-size:13px;color:${BRAND.muted};">
+        <strong style="color:${BRAND.ink};font-size:15px;">${workbookStats.enrolled}</strong> students enrolled
+        &nbsp;·&nbsp;
+        <strong style="color:${BRAND.ink};font-size:15px;">${workbookStats.registered}</strong> registered
+      </div>
+      <div style="margin-top:6px;font-size:13px;color:${BRAND.muted};">
+        The attached Excel file has every student with their contact details, updated just now.
+      </div>
+    </div>`
+    : '';
+
   const inner = `
     <h1 style="margin:0 0 6px;font-size:21px;color:${BRAND.ink};">New enrolment</h1>
     <p style="margin:0 0 20px;font-size:14px;color:${BRAND.muted};">
       ${escapeHtml(enrollment.studentName || 'A student')} just paid for ${escapeHtml(enrollment.courseTitle)}.
     </p>
+    ${totals}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${BRAND.border};border-radius:16px;">
       ${row('Name', enrollment.studentName)}
       ${row('Email', enrollment.email)}
@@ -178,6 +193,56 @@ export function buildAdminEmail(enrollment) {
     subject: `New enrolment - ${enrollment.studentName || enrollment.email} - ${formatINR(enrollment.amount)}`,
     html: shell('New BrightMinds enrolment', inner),
   };
+}
+
+/**
+ * Tells the admin a new student has signed in for the very first time.
+ * Sent once per student, on signup — not on every login, which would be spam.
+ */
+export function buildSignupEmail(user) {
+  const inner = `
+    <h1 style="margin:0 0 6px;font-size:21px;color:${BRAND.ink};">New student signed up</h1>
+    <p style="margin:0 0 20px;font-size:14px;color:${BRAND.muted};">
+      They have created an account but have <strong>not paid yet</strong>.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${BRAND.border};border-radius:16px;">
+      ${row('Name', user.displayName || 'Not provided')}
+      ${row('Email', user.email)}
+      ${row('Phone', user.phone || 'Not provided yet')}
+      ${row('Signed up (IST)', formatIST(user.signupAt))}
+    </table>
+    <p style="margin:20px 0 0;font-size:13px;color:${BRAND.muted};">
+      Full list and Excel export: <a href="${SITE_URL}/admin" style="color:${BRAND.ink};">${SITE_URL.replace(/^https?:\/\//, '')}/admin</a>
+    </p>`;
+
+  return {
+    subject: `New signup - ${user.displayName || user.email}`,
+    html: shell('New BrightMinds signup', inner),
+  };
+}
+
+/** Fire-and-forget admin alert for a brand-new student account. */
+export async function sendSignupEmail(user) {
+  const resend = getResend();
+  if (!resend) {
+    console.warn('RESEND_API_KEY missing - skipping signup notification.');
+    return { sent: false, reason: 'not-configured' };
+  }
+
+  try {
+    const { subject, html } = buildSignupEmail(user);
+    const response = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'BrightMinds <onboarding@resend.dev>',
+      to: process.env.ADMIN_EMAIL || SUPPORT_EMAIL,
+      subject,
+      html,
+    });
+    if (response?.error) throw new Error(response.error.message || 'Resend rejected the signup email');
+    return { sent: true };
+  } catch (error) {
+    console.error('Failed to send signup notification:', error);
+    return { sent: false, reason: error?.message };
+  }
 }
 
 /**
@@ -214,9 +279,30 @@ export async function sendEnrollmentEmails(enrollment) {
     }
   }
 
+  // The admin notification carries the up-to-date student spreadsheet.
+  // Building it must never stop the notification going out, so it is attempted
+  // separately and the email is sent either way.
+  let attachments;
   try {
-    const { subject, html } = buildAdminEmail(enrollment);
-    const response = await resend.emails.send({ from, to: adminEmail, subject, html });
+    const { buildEnrolmentWorkbook } = await import('./workbook.js');
+    const workbook = await buildEnrolmentWorkbook();
+    attachments = [{ filename: workbook.filename, content: workbook.buffer.toString('base64') }];
+    result.workbookAttached = true;
+    result.workbookStats = { registered: workbook.registered, enrolled: workbook.enrolled };
+  } catch (error) {
+    console.error('Could not build the student workbook for the admin email:', error);
+    result.workbookAttached = false;
+  }
+
+  try {
+    const { subject, html } = buildAdminEmail(enrollment, result.workbookStats);
+    const response = await resend.emails.send({
+      from,
+      to: adminEmail,
+      subject,
+      html,
+      ...(attachments ? { attachments } : {}),
+    });
     if (response?.error) throw new Error(response.error.message || 'Resend rejected the admin email');
     result.adminEmailSent = true;
   } catch (error) {

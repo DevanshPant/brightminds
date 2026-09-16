@@ -7,9 +7,9 @@ import {
   signOut as fbSignOut,
   type User,
 } from 'firebase/auth';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db, googleProvider, isFirebaseConfigured } from '@/lib/firebase';
+import { auth, googleProvider, isFirebaseConfigured } from '@/lib/firebase';
 import { getErrorCode } from '@/lib/errors';
+import { apiPost } from '@/lib/api';
 import { AuthContext, type AuthContextValue } from '@/contexts/auth-context';
 
 /** Errors that mean "popup won't work here" — fall back to a full redirect. */
@@ -20,23 +20,17 @@ const REDIRECT_FALLBACK_CODES = new Set([
   'auth/web-storage-unsupported',
 ]);
 
-const syncUserProfile = async (user: User) => {
-  if (!db) return;
+/**
+ * Records the sign-in server-side, which also alerts the admin the first time
+ * a student appears. Deliberately fire-and-forget: a failure here must never
+ * stop someone getting into their account.
+ */
+const recordLogin = async (user: User) => {
   try {
-    await setDoc(
-      doc(db, 'users', user.uid),
-      {
-        uid: user.uid,
-        email: user.email ?? null,
-        displayName: user.displayName ?? null,
-        photoURL: user.photoURL ?? null,
-        lastLoginAt: serverTimestamp(),
-      },
-      { merge: true },
-    );
+    const token = await user.getIdToken();
+    await apiPost('/api/register-login', {}, token);
   } catch (error) {
-    // A profile write failing must never block sign-in.
-    console.warn('Could not sync user profile:', error);
+    console.warn('Could not record this sign-in:', error);
   }
 };
 
@@ -54,14 +48,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     // Complete any sign-in that used the redirect fallback.
     getRedirectResult(auth)
       .then((result) => {
-        if (result?.user) void syncUserProfile(result.user);
+        if (result?.user) void recordLogin(result.user);
       })
       .catch((error) => console.warn('Redirect sign-in failed:', error));
 
+    // Only the two branches above record a login. This fires on every page
+    // load for an existing session too, so counting here would turn a refresh
+    // into a "sign-in".
     const unsubscribe = onAuthStateChanged(auth, (nextUser) => {
       setUser(nextUser);
       setLoading(false);
-      if (nextUser) void syncUserProfile(nextUser);
     });
 
     return unsubscribe;
@@ -79,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSigningIn(true);
         try {
           const result = await signInWithPopup(auth, googleProvider);
-          await syncUserProfile(result.user);
+          await recordLogin(result.user);
         } catch (error) {
           const code = getErrorCode(error);
           // Many mobile browsers block popups — finish the sign-in via redirect.

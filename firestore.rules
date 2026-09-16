@@ -39,16 +39,13 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == uid;
     }
 
-    // Student profiles — a student may create and update only their own, and
-    // only the profile fields (no role/admin escalation).
+    // Student profiles — readable by their owner and by an admin, but written
+    // only by the server (/api/register-login). A student therefore cannot
+    // backdate their own signup, inflate their login count, or grant
+    // themselves a role.
     match /users/{uid} {
       allow read: if isOwner(uid) || isAdmin();
-      allow create, update: if isOwner(uid)
-        && request.resource.data.uid == uid
-        && request.resource.data.keys().hasOnly(
-             ['uid', 'email', 'displayName', 'photoURL', 'lastLoginAt', 'phone']
-           );
-      allow delete: if false;
+      allow write: if false;
     }
 
     // Enrolments — readable by their owner, written only by the server.

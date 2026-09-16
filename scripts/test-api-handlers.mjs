@@ -19,6 +19,8 @@ const createOrder = (await import('../api/create-order.js')).default;
 const verifyPayment = (await import('../api/verify-payment.js')).default;
 const webhook = (await import('../api/razorpay-webhook.js')).default;
 const health = (await import('../api/health.js')).default;
+const registerLogin = (await import('../api/register-login.js')).default;
+const adminExport = (await import('../api/admin-export.js')).default;
 
 let passed = 0;
 let failed = 0;
@@ -230,6 +232,41 @@ await test('malformed JSON with a valid signature is a 400, not a crash', async 
     res,
   );
   assert.equal(res.statusCode, 400);
+});
+
+console.log('\n/api/register-login');
+await test('rejects an unauthenticated request with 401', async () => {
+  const res = mockRes();
+  await registerLogin(mockReq({ body: {} }), res);
+  assert.equal(res.statusCode, 401);
+});
+
+await test('rejects a GET with 405', async () => {
+  const res = mockRes();
+  await registerLogin(mockReq({ method: 'GET' }), res);
+  assert.equal(res.statusCode, 405);
+});
+
+console.log('\n/api/admin-export');
+await test('rejects an unauthenticated download with 401', async () => {
+  const res = mockRes();
+  await adminExport(mockReq({ method: 'GET' }), res);
+  assert.equal(res.statusCode, 401);
+});
+
+await test('rejects a POST with 405', async () => {
+  const res = mockRes();
+  await adminExport(mockReq({ method: 'POST' }), res);
+  assert.equal(res.statusCode, 405);
+});
+
+await test('never leaks student data without a verified admin token', async () => {
+  // No token at all must never reach the spreadsheet builder.
+  const res = mockRes();
+  await adminExport(mockReq({ method: 'GET', headers: { authorization: 'Bearer nonsense' } }), res);
+  assert.ok(res.statusCode === 401 || res.statusCode === 403,
+    `expected 401/403, got ${res.statusCode}`);
+  assert.notEqual(res.statusCode, 200);
 });
 
 console.error = originalError;

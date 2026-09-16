@@ -18,7 +18,8 @@
     "firebase:login": "npx -y firebase-tools@latest login",
     "check:deploy": "node scripts/check-firestore-deploy.mjs",
     "deploy:indexes": "node scripts/deploy-indexes.mjs",
-    "test:auth": "node scripts/test-auth-rules.mjs"
+    "test:auth": "node scripts/test-auth-rules.mjs",
+    "backfill:users": "node scripts/backfill-users.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -55,6 +56,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+    "exceljs": "^4.4.0",
     "firebase": "^11.10.0",
     "firebase-admin": "^13.10.0",
     "input-otp": "^1.4.2",

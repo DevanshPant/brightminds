@@ -82,13 +82,25 @@ try {
   // ── what a student may do ─────────────────────────────────────────────────
   console.log('\nSecurity rules — student permissions');
 
+  // Profiles are written only by /api/register-login, so even a student's own
+  // profile is off limits from the browser. That stops anyone backdating their
+  // signup or inflating their login count.
   const ownProfile = await asStudent(`${DOC}/users/${STUDENT}?updateMask.fieldPaths=uid&updateMask.fieldPaths=email`, {
     method: 'PATCH',
     body: JSON.stringify({ fields: { uid: { stringValue: STUDENT }, email: { stringValue: `${STUDENT}@example.com` } } }),
   });
-  check('student CAN write their own profile', ownProfile.status === 200,
-        `got ${ownProfile.status}`);
+  check('student CANNOT write even their own profile', ownProfile.status === 403,
+        `expected 403, got ${ownProfile.status}`);
   cleanup.push(() => db.collection('users').doc(STUDENT).delete().catch(() => {}));
+
+  // ...but the server can, and the student must be able to read it back.
+  await db.collection('users').doc(STUDENT).set({
+    uid: STUDENT, email: `${STUDENT}@example.com`, displayName: 'Test Student',
+    signupAt: new Date().toISOString(), lastLoginAt: new Date().toISOString(), loginCount: 1,
+  });
+  const readOwnProfile = await asStudent(`${DOC}/users/${STUDENT}`);
+  check('student CAN read their own profile', readOwnProfile.status === 200,
+        `got ${readOwnProfile.status}`);
 
   const otherProfile = await asStudent(`${DOC}/users/${OTHER}?updateMask.fieldPaths=uid`, {
     method: 'PATCH',
