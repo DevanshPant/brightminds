@@ -25,6 +25,9 @@ const adminExport = (await import('../api/admin-export.js')).default;
 let passed = 0;
 let failed = 0;
 
+// Failures print via console.log, NOT console.error: this file stubs
+// console.error to silence expected noise from the handlers, and a failure
+// printed through it would vanish - leaving a red count with no explanation.
 const test = async (name, fn) => {
   try {
     await fn();
@@ -32,8 +35,8 @@ const test = async (name, fn) => {
     console.log(`  ✓ ${name}`);
   } catch (error) {
     failed += 1;
-    console.error(`  ✗ ${name}`);
-    console.error(`    ${error.message}`);
+    console.log(`  ✗ ${name}`);
+    console.log(`      ${String(error.message).split(String.fromCharCode(10))[0]}`);
   }
 };
 
@@ -81,7 +84,10 @@ await test('reports configuration status without leaking secrets', async () => {
   const res = mockRes();
   await health(mockReq({ method: 'GET' }), res);
   assert.equal(res.statusCode, 200);
-  assert.equal(res.body.status, 'ok');
+  // Nothing is fully configured in this run, so "degraded" is the correct,
+  // honest answer. Reporting "ok" here is what hid a real outage.
+  assert.equal(res.body.status, 'degraded');
+  assert.ok(Array.isArray(res.body.problems) && res.body.problems.length > 0);
   assert.equal(res.body.configured.razorpayKeys, true);
   assert.equal(res.body.configured.razorpayMode, 'test');
   assert.equal(res.body.configured.whatsappLink, true);
