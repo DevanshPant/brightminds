@@ -156,17 +156,31 @@ if (apiKey?.startsWith('re_') && fromDomain) {
 if (process.argv.includes('--send') && problems === 0 && apiKey) {
   console.log('\nSending a real test email');
   try {
-    const { buildReceiptEmail } = await import('../api/_lib/email.js');
-    const { subject, html } = buildReceiptEmail({
-      studentName: 'Test Student',
-      courseTitle: 'NDA-1 April 2027',
-      amount: 499,
-      receiptNo: 'BM-TEST-0001',
-      razorpayPaymentId: 'pay_TEST',
-      razorpayOrderId: 'order_TEST',
-      paidAt: new Date().toISOString(),
-      whatsappLink: process.env.WHATSAPP_COMMUNITY_LINK || null,
-    });
+    // Deliberately NOT the student receipt template. Sending a realistic
+    // "you are enrolled" email to the admin inbox looks like a real receipt
+    // delivered to the wrong person, which is alarming and wastes time.
+    const subject = 'BrightMinds email check - this is only a test';
+    const html = `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:24px;background:#FFFBF0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+  <div style="max-width:520px;margin:0 auto;background:#fff;border:2px dashed #F5B700;border-radius:16px;padding:28px;">
+    <div style="display:inline-block;padding:6px 12px;border-radius:999px;background:#FFF4CC;color:#7A5B00;font-size:12px;font-weight:700;">TEST EMAIL</div>
+    <h1 style="margin:16px 0 8px;font-size:20px;color:#1A1714;">Email delivery is working</h1>
+    <p style="margin:0 0 16px;font-size:14px;color:#6B6257;line-height:1.6;">
+      Sent by <code>npm run check:email -- --send</code> to confirm that BrightMinds
+      can deliver mail from its own domain. <strong>No student was involved and no
+      payment was taken.</strong>
+    </p>
+    <table style="width:100%;font-size:13px;color:#6B6257;">
+      <tr><td style="padding:4px 0;">Sent from</td><td style="text-align:right;color:#1A1714;">${fromEmail || '(default)'}</td></tr>
+      <tr><td style="padding:4px 0;">Sent to</td><td style="text-align:right;color:#1A1714;">${adminEmail}</td></tr>
+      <tr><td style="padding:4px 0;">Time (IST)</td><td style="text-align:right;color:#1A1714;">${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td></tr>
+    </table>
+    <p style="margin:18px 0 0;font-size:12px;color:#9A9188;">
+      Real student receipts say "Payment received". Real admin alerts say "New enrolment".
+    </p>
+  </div>
+</body></html>`;
 
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -174,13 +188,13 @@ if (process.argv.includes('--send') && problems === 0 && apiKey) {
       body: JSON.stringify({
         from: fromRaw || 'BrightMinds <onboarding@resend.dev>',
         to: adminEmail,
-        subject: `[TEST] ${subject}`,
+        subject,
         html,
       }),
     });
     const body = await res.json();
     if (res.ok) {
-      ok(`Test receipt sent to ${adminEmail} (id ${body.id})`);
+      ok(`Test email sent to ${adminEmail} (id ${body.id})`);
       console.log(`${D}       Check the inbox - and the spam folder.${X}`);
     } else {
       fail(`Resend refused the send: ${body?.message || res.status}`);
