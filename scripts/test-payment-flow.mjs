@@ -1,5 +1,5 @@
 /**
- * Offline tests for the money-handling code paths — no Firebase, Razorpay or
+ * Offline tests for the money-handling code paths - no Firebase, Razorpay or
  * Resend account needed. Run this after changing anything under api/.
  *
  *   npm run test:payments

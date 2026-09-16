@@ -39,7 +39,7 @@ for (const raw of (await readFile(envPath, 'utf8')).split(/\r?\n/)) {
 }
 
 const projectId = process.env.FIREBASE_PROJECT_ID;
-console.log(`\nFirestore deployment check — project ${projectId}\n`);
+console.log(`\nFirestore deployment check - project ${projectId}\n`);
 
 // ── access token from the service account ───────────────────────────────────
 const { getAdminApp } = await import('../api/_lib/firebaseAdmin.js');
@@ -60,7 +60,7 @@ try {
 
   if (releases.status === 403) {
     warn('The service account cannot read rules (missing IAM permission).');
-    console.log(`${D}       Not fatal — check them by eye in the Firebase console.${X}`);
+    console.log(`${D}       Not fatal - check them by eye in the Firebase console.${X}`);
   } else if (releases.status !== 200) {
     fail(`Rules API returned ${releases.status}: ${releases.body?.error?.message || ''}`);
   } else {
@@ -78,7 +78,7 @@ try {
       if (!live) {
         fail('Could not read the live ruleset contents.');
       } else if (/allow read, write: if true/.test(live)) {
-        fail('DEFAULT TEST-MODE RULES ARE LIVE — your database is world-writable.');
+        fail('DEFAULT TEST-MODE RULES ARE LIVE - your database is world-writable.');
       } else {
         ok(`Rules published ${new Date(release.updateTime).toLocaleString('en-IN')}`);
 
@@ -89,7 +89,7 @@ try {
         if (strip(live) === strip(expected)) {
           ok('Live rules match firestore.rules in this repo');
         } else {
-          fail('Live rules DIFFER from firestore.rules in this repo — redeploy them');
+          fail('Live rules DIFFER from firestore.rules in this repo - redeploy them');
         }
 
         for (const [label, re] of [
@@ -143,10 +143,10 @@ try {
       });
       const label = `${want.collection}: ${want.fields.map((f) => `${f[0]} ${f[1] === 'ASCENDING' ? 'asc' : 'desc'}`).join(', ')}`;
       if (!match) {
-        fail(`MISSING index — ${label}`);
+        fail(`MISSING index - ${label}`);
         console.log(`${D}       Needed by: ${want.used}${X}`);
       } else if (match.state !== 'READY') {
-        warn(`${label} — still building (state: ${match.state})`);
+        warn(`${label} - still building (state: ${match.state})`);
       } else {
         ok(label);
       }

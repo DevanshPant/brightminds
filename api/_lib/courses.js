@@ -1,5 +1,5 @@
 /**
- * Server-side course catalogue — the ONLY authority on price.
+ * Server-side course catalogue - the ONLY authority on price.
  * The client never sends an amount; it sends a courseId and the server
  * looks the price up here.
  *

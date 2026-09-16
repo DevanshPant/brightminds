@@ -37,7 +37,7 @@ export function fail(res, status, message, details) {
   return res.status(status).json({ error: message });
 }
 
-/** Reads the untouched request body — required for webhook signature checks. */
+/** Reads the untouched request body - required for webhook signature checks. */
 export async function readRawBody(req) {
   if (Buffer.isBuffer(req.body)) return req.body.toString('utf8');
   if (typeof req.body === 'string') return req.body;

@@ -1,6 +1,6 @@
 /**
  * Adds signupAt / loginCount to student profiles created before those fields
- * existed. Idempotent — documents that already have them are left alone.
+ * existed. Idempotent - documents that already have them are left alone.
  *
  *   npm run backfill:users
  */

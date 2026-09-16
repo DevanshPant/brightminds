@@ -13,7 +13,7 @@ const env = (name) => {
  * GET /api/health
  *
  * Reports every environment variable the server needs, and whether the values
- * will actually work — not just whether something is present. Never echoes a
+ * will actually work - not just whether something is present. Never echoes a
  * secret: keys are reported as booleans, addresses are shown because they are
  * not secret and are exactly what goes wrong.
  */
@@ -32,12 +32,12 @@ export default function handler(req, res) {
 
   // Things that are set but will not actually work in production.
   const problems = [];
-  if (!firebaseAdmin) problems.push('FIREBASE_* credentials are missing — payments cannot be recorded.');
-  if (!keyId || !env('RAZORPAY_KEY_SECRET')) problems.push('RAZORPAY_* keys are missing — checkout cannot start.');
-  if (!env('RESEND_API_KEY')) problems.push('RESEND_API_KEY is missing — no receipts will be sent.');
+  if (!firebaseAdmin) problems.push('FIREBASE_* credentials are missing - payments cannot be recorded.');
+  if (!keyId || !env('RAZORPAY_KEY_SECRET')) problems.push('RAZORPAY_* keys are missing - checkout cannot start.');
+  if (!env('RESEND_API_KEY')) problems.push('RESEND_API_KEY is missing - no receipts will be sent.');
   if (!fromConfigured) {
     problems.push(
-      'RESEND_FROM_EMAIL is NOT set — falling back to resend.dev, which can only ' +
+      'RESEND_FROM_EMAIL is NOT set - falling back to resend.dev, which can only ' +
         'email the Resend account owner. Students will receive nothing.',
     );
   } else if (usingResendDev) {
@@ -46,10 +46,10 @@ export default function handler(req, res) {
         'It must be "Name <you@yourdomain>" on a domain verified in Resend.',
     );
   }
-  if (!env('ADMIN_EMAIL')) problems.push('ADMIN_EMAIL is missing — nobody is told about new enrolments.');
-  if (!env('VITE_ADMIN_EMAILS')) problems.push('VITE_ADMIN_EMAILS is missing — /api/admin-export will refuse everyone.');
+  if (!env('ADMIN_EMAIL')) problems.push('ADMIN_EMAIL is missing - nobody is told about new enrolments.');
+  if (!env('VITE_ADMIN_EMAILS')) problems.push('VITE_ADMIN_EMAILS is missing - /api/admin-export will refuse everyone.');
   if (!env('RAZORPAY_WEBHOOK_SECRET')) {
-    problems.push('RAZORPAY_WEBHOOK_SECRET is missing — a payment is lost if the browser closes early.');
+    problems.push('RAZORPAY_WEBHOOK_SECRET is missing - a payment is lost if the browser closes early.');
   }
 
   return res.status(200).json({

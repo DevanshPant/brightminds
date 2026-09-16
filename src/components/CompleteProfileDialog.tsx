@@ -77,7 +77,7 @@ const CompleteProfileDialog = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => { /* required step — not dismissable */ }}>
+    <Dialog open={open} onOpenChange={() => { /* required step - not dismissable */ }}>
       <DialogContent
         className="sm:max-w-md rounded-3xl border-primary/15 bg-gradient-golden"
         hideClose

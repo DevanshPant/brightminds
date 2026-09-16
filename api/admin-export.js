@@ -12,7 +12,7 @@ const adminEmails = () =>
  * GET /api/admin-export
  * Auth: Firebase ID token belonging to an allowlisted admin.
  *
- * Returns the student spreadsheet — the same file the admin receives attached
+ * Returns the student spreadsheet - the same file the admin receives attached
  * to every enrolment email, built by the same function.
  */
 export default async function handler(req, res) {
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
   const email = String(user.email || '').toLowerCase();
   const allowed = adminEmails();
 
-  // Verified email only — an unverified account claiming an admin address
+  // Verified email only - an unverified account claiming an admin address
   // must not be able to download every student's contact details.
   if (!email || !user.email_verified || !allowed.includes(email)) {
     return fail(res, 403, 'This export is restricted to administrators.');

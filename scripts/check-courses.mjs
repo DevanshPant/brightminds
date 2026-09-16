@@ -48,12 +48,12 @@ for (const client of clientCourses) {
   }
   if (server.price !== client.price) {
     problems.push(
-      `"${client.id}" price mismatch — site shows ₹${client.price}, server charges ₹${server.price}`,
+      `"${client.id}" price mismatch - site shows ₹${client.price}, server charges ₹${server.price}`,
     );
   }
   if (server.title !== client.title) {
     problems.push(
-      `"${client.id}" title mismatch — site: "${client.title}", server: "${server.title}"`,
+      `"${client.id}" title mismatch - site: "${client.title}", server: "${server.title}"`,
     );
   }
 }

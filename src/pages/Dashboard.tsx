@@ -19,9 +19,9 @@ import { useEnrollments } from '@/hooks/useEnrollments';
 import { COURSES, formatINR, WHATSAPP_COMMUNITY_LINK } from '@/config/course';
 
 const formatDate = (value?: string) => {
-  if (!value) return '—';
+  if (!value) return '-';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  if (Number.isNaN(date.getTime())) return '-';
   return date.toLocaleString('en-IN', {
     timeZone: 'Asia/Kolkata',
     dateStyle: 'medium',
@@ -103,7 +103,7 @@ const Dashboard = () => {
                   You have not enrolled yet
                 </h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto leading-relaxed">
-                  Browse our courses and join a batch — enrolment takes under two minutes.
+                  Browse our courses and join a batch - enrolment takes under two minutes.
                 </p>
                 <Button variant="hero" size="lg" asChild>
                   <Link to="/#courses">
@@ -157,7 +157,7 @@ const Dashboard = () => {
                             <div key={label} className="flex justify-between gap-3">
                               <dt className="text-muted-foreground shrink-0">{label}</dt>
                               <dd className="font-medium text-foreground text-right break-all">
-                                {value || '—'}
+                                {value || '-'}
                               </dd>
                             </div>
                           ))}

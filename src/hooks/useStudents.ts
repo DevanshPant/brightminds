@@ -16,7 +16,7 @@ export type Student = {
 };
 
 /**
- * Every student who has ever signed in — not just those who paid.
+ * Every student who has ever signed in - not just those who paid.
  * Admin-only: Firestore rules reject this query for anyone else.
  */
 export const useStudents = (enabled: boolean) => {

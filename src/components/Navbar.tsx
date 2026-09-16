@@ -27,7 +27,7 @@ const mainLinks = [
   { name: 'Contact', href: '#contact' },
 ];
 
-/** Added to the mobile menu only — also linked from the footer. */
+/** Added to the mobile menu only - also linked from the footer. */
 const secondaryLinks = [
   { name: 'Privacy Policy', href: '/privacy-policy' },
   { name: 'Terms of Use', href: '/terms-of-use' },

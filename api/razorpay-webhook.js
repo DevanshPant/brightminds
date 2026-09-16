@@ -16,7 +16,7 @@ export const config = {
  * runs, this still enrols them and sends the receipt. Fulfilment is
  * idempotent, so both paths firing is harmless.
  *
- * Always replies 200 once the signature is valid — a non-2xx makes Razorpay
+ * Always replies 200 once the signature is valid - a non-2xx makes Razorpay
  * retry, and we do not want retries for problems a retry cannot fix.
  */
 export default async function handler(req, res) {
@@ -120,7 +120,7 @@ export default async function handler(req, res) {
     await eventRef.delete().catch((cleanupError) =>
       console.error('Could not release webhook claim:', cleanupError),
     );
-    // 500 asks Razorpay to retry — correct for transient Firestore errors.
+    // 500 asks Razorpay to retry - correct for transient Firestore errors.
     return res.status(500).json({ error: 'Processing failed' });
   }
 }

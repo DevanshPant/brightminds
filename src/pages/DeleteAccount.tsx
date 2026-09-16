@@ -17,7 +17,7 @@ const DeleteAccount = () => {
 
             <hr className="my-12 border-primary/20" />
 
-            <h2 className="text-3xl font-semibold mb-6 text-primary">Option 1 — Delete from the app</h2>
+            <h2 className="text-3xl font-semibold mb-6 text-primary">Option 1 - Delete from the app</h2>
             <ol className="list-decimal pl-6 mb-8 space-y-2">
               <li>Open the BrightMinds app on your device</li>
               <li>Tap Profile (bottom navigation bar)</li>
@@ -26,7 +26,7 @@ const DeleteAccount = () => {
               <li>Confirm the deletion when prompted</li>
             </ol>
 
-            <h2 className="text-3xl font-semibold mb-6 text-primary">Option 2 — Email us</h2>
+            <h2 className="text-3xl font-semibold mb-6 text-primary">Option 2 - Email us</h2>
             <p className="mb-4">Send an email to <a href="mailto:hello@brightminds.in" className="text-primary hover:underline">hello@brightminds.in</a> with the subject line "Account Deletion Request" and include:</p>
             <ul className="list-disc pl-6 mb-8">
               <li>The email address linked to your account</li>

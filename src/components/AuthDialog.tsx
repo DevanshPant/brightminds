@@ -17,7 +17,7 @@ const AuthDialog = ({
   open,
   onOpenChange,
   title = 'Sign in to continue',
-  description = 'Use your Google account — no password to remember, and your enrolments stay saved.',
+  description = 'Use your Google account - no password to remember, and your enrolments stay saved.',
 }: Props) => {
   const { signInWithGoogle, configured } = useAuth();
   const { toast } = useToast();

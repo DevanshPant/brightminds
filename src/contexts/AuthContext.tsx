@@ -12,7 +12,7 @@ import { getErrorCode } from '@/lib/errors';
 import { apiPost } from '@/lib/api';
 import { AuthContext, type AuthContextValue } from '@/contexts/auth-context';
 
-/** Errors that mean "popup won't work here" — fall back to a full redirect. */
+/** Errors that mean "popup won't work here" - fall back to a full redirect. */
 const REDIRECT_FALLBACK_CODES = new Set([
   'auth/popup-blocked',
   'auth/operation-not-supported-in-this-environment',
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           await recordLogin(result.user);
         } catch (error) {
           const code = getErrorCode(error);
-          // Many mobile browsers block popups — finish the sign-in via redirect.
+          // Many mobile browsers block popups - finish the sign-in via redirect.
           if (REDIRECT_FALLBACK_CODES.has(code)) {
             await signInWithRedirect(auth, googleProvider);
             return;

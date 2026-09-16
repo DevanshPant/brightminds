@@ -1,6 +1,6 @@
 /**
  * Exercises the serverless handlers end-to-end with mock req/res objects.
- * No Firebase, Razorpay or Resend account required — these tests cover the
+ * No Firebase, Razorpay or Resend account required - these tests cover the
  * guards that run BEFORE any external service is touched, which is exactly
  * where a mistake would be most expensive.
  *

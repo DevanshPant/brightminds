@@ -85,7 +85,7 @@ if (failed) {
   process.exit(1);
 }
 if (created) {
-  console.log(`${Y}${created} index(es) created — Firestore builds these in the background.${X}`);
+  console.log(`${Y}${created} index(es) created - Firestore builds these in the background.${X}`);
   console.log(`${D}Run \`npm run check:deploy\` in a minute to confirm they are READY.${X}\n`);
 } else {
   console.log(`${G}All indexes already present.${X}\n`);

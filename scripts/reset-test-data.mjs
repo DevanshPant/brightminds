@@ -35,7 +35,7 @@ const { adminDb, adminAuth } = await import('../api/_lib/firebaseAdmin.js');
 const db = adminDb();
 const auth = adminAuth();
 
-console.log(`\nReset test data — project ${process.env.FIREBASE_PROJECT_ID}\n`);
+console.log(`\nReset test data - project ${process.env.FIREBASE_PROJECT_ID}\n`);
 
 // ── inventory ───────────────────────────────────────────────────────────────
 const snapshot = {};
@@ -65,12 +65,12 @@ if (payments.length) {
 }
 
 if (total === 0 && users.users.length === 0) {
-  console.log(`\n${G}Already empty — nothing to do.${X}\n`);
+  console.log(`\n${G}Already empty - nothing to do.${X}\n`);
   process.exit(0);
 }
 
 if (!CONFIRM) {
-  console.log(`\n${Y}Dry run — nothing deleted.${X}`);
+  console.log(`\n${Y}Dry run - nothing deleted.${X}`);
   console.log(`${D}To go ahead:  npm run reset:data -- --confirm${X}\n`);
   process.exit(0);
 }
@@ -126,6 +126,6 @@ if (leftover === 0 && remainingUsers.users.length === 0) {
   console.log(`${G}Database is clean. Ready to test.${X}`);
   console.log(`${D}Backup kept at ${path.relative(root, backupPath)} (git-ignored).${X}\n`);
 } else {
-  console.log(`${R}Some records remain — re-run to clear them.${X}\n`);
+  console.log(`${R}Some records remain - re-run to clear them.${X}\n`);
   process.exit(1);
 }

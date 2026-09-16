@@ -78,7 +78,7 @@ type StartCheckoutArgs = {
   phone?: string;
   onSuccess: (result: VerifyPaymentResponse) => void;
   onFailure: (message: string) => void;
-  /** Money taken but the enrolment could not be confirmed — the worst case. */
+  /** Money taken but the enrolment could not be confirmed - the worst case. */
   onUnconfirmed?: (details: { paymentId: string; orderId: string; message: string }) => void;
   onDismiss?: () => void;
 };

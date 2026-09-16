@@ -1,7 +1,7 @@
 /**
  * Emails the WhatsApp community link to every enrolled student.
  *
- * For when the link arrives after students have already paid — their original
+ * For when the link arrives after students have already paid - their original
  * receipt said "your invite is on its way", and this is what sends it.
  *
  *   npm run send:whatsapp-link              dry run, lists who would be emailed
@@ -33,7 +33,7 @@ const link = process.env.WHATSAPP_COMMUNITY_LINK;
 const apiKey = process.env.RESEND_API_KEY;
 const from = process.env.RESEND_FROM_EMAIL || 'BrightMinds <onboarding@resend.dev>';
 
-console.log('\nWhatsApp community link — send to enrolled students\n');
+console.log('\nWhatsApp community link - send to enrolled students\n');
 
 if (!link) {
   console.log(`${R}WHATSAPP_COMMUNITY_LINK is empty in .env.${X}`);
@@ -45,7 +45,7 @@ if (!/^https:\/\/(chat\.whatsapp\.com|wa\.me)\//.test(link)) {
   console.log(`  ${link}\n`);
 }
 if (SEND && !apiKey) {
-  console.log(`${R}RESEND_API_KEY is empty — cannot send.${X}\n`);
+  console.log(`${R}RESEND_API_KEY is empty - cannot send.${X}\n`);
   process.exit(1);
 }
 
@@ -66,7 +66,7 @@ snap.docs.forEach((doc) => {
 const recipients = [...byEmail.values()];
 
 if (recipients.length === 0) {
-  console.log(`${G}Nobody to email${X} — every enrolled student has already been sent the link.`);
+  console.log(`${G}Nobody to email${X} - every enrolled student has already been sent the link.`);
   console.log(`${D}Re-send to everyone anyway with --force.${X}\n`);
   process.exit(0);
 }
@@ -77,7 +77,7 @@ recipients.forEach((r) =>
 );
 
 if (!SEND) {
-  console.log(`\n${Y}Dry run — nothing sent.${X}`);
+  console.log(`\n${Y}Dry run - nothing sent.${X}`);
   console.log(`${D}Send for real:  npm run send:whatsapp-link -- --send${X}\n`);
   process.exit(0);
 }
@@ -96,7 +96,7 @@ for (const r of recipients) {
       body: JSON.stringify({
         from,
         to: r.email,
-        subject: `Join the BrightMinds community — ${r.courseTitle}`,
+        subject: `Join the BrightMinds community - ${r.courseTitle}`,
         html,
       }),
     });
@@ -108,7 +108,7 @@ for (const r of recipients) {
     console.log(`  ${G}sent${X}   ${r.email}`);
   } catch (error) {
     failed += 1;
-    console.log(`  ${R}failed${X} ${r.email} — ${error.message}`);
+    console.log(`  ${R}failed${X} ${r.email} - ${error.message}`);
   }
 }
 

@@ -127,7 +127,7 @@ export function buildReceiptEmail(enrollment) {
   const whatsappBlock = whatsappLink
     ? `
       <div style="margin:28px 0 8px;padding:22px;background:#F0FFF4;border:1px solid #C6F6D5;border-radius:16px;text-align:center;">
-        <div style="font-size:17px;font-weight:700;color:${BRAND.ink};margin-bottom:6px;">One last step &mdash; join the community</div>
+        <div style="font-size:17px;font-weight:700;color:${BRAND.ink};margin-bottom:6px;">One last step - join the community</div>
         <p style="margin:0 0 18px;font-size:14px;color:${BRAND.muted};line-height:1.6;">
           Batch timings, session links, recordings and study material are shared <strong>only</strong> in our private WhatsApp community. Please join now so you do not miss the first session.
         </p>
@@ -172,7 +172,7 @@ export function buildReceiptEmail(enrollment) {
     ${whatsappBlock}
 
     <p style="margin:24px 0 0;font-size:13px;color:${BRAND.muted};line-height:1.7;">
-      Keep this email &mdash; it is your official receipt. You can also view it any time by signing in at
+      Keep this email - it is your official receipt. You can also view it any time by signing in at
       <a href="${SITE_URL}/dashboard" style="color:${BRAND.ink};">${SITE_URL.replace(/^https?:\/\//, '')}/dashboard</a>.
     </p>`;
 
@@ -228,7 +228,7 @@ export function buildAdminEmail(enrollment, workbookStats) {
 
 /**
  * Tells the admin a new student has signed in for the very first time.
- * Sent once per student, on signup — not on every login, which would be spam.
+ * Sent once per student, on signup - not on every login, which would be spam.
  */
 export function buildSignupEmail(user) {
   const inner = `

@@ -57,7 +57,7 @@ const CoursePage = () => {
           </Link>
 
           <div className="grid lg:grid-cols-[1fr_380px] gap-10 lg:gap-14 items-start">
-            {/* Left — headline */}
+            {/* Left - headline */}
             <div>
               <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-gradient-accent text-xs font-bold text-foreground uppercase tracking-wide mb-5">
                 <Sparkles className="w-3.5 h-3.5" />
@@ -89,7 +89,7 @@ const CoursePage = () => {
               </div>
             </div>
 
-            {/* Right — sticky pricing card */}
+            {/* Right - sticky pricing card */}
             <aside className="lg:sticky lg:top-28 w-full">
               <div className="rounded-3xl border border-primary/15 bg-card p-6 sm:p-7 shadow-golden-lg">
                 <div className="flex items-baseline gap-3 mb-2">
@@ -110,7 +110,7 @@ const CoursePage = () => {
 
                 <ul className="mt-6 space-y-3">
                   {[
-                    { icon: ShieldCheck, text: 'Secure payment via Razorpay — UPI, cards, net banking' },
+                    { icon: ShieldCheck, text: 'Secure payment via Razorpay - UPI, cards, net banking' },
                     { icon: Check, text: 'Instant payment receipt emailed to you' },
                     { icon: MessageCircle, text: 'Private WhatsApp community link on enrolment' },
                   ].map(({ icon: Icon, text }) => (
@@ -234,7 +234,7 @@ const CoursePage = () => {
               Ready to give your child direction?
             </h2>
             <p className="text-foreground/80 mb-8 max-w-xl mx-auto leading-relaxed">
-              {course.seats ? `${course.seats}. ` : ''}Enrol in under two minutes — sign in with Google,
+              {course.seats ? `${course.seats}. ` : ''}Enrol in under two minutes - sign in with Google,
               pay {formatINR(course.price)} securely, and join the community straight away.
             </p>
             <div className="flex justify-center">

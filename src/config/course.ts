@@ -1,6 +1,6 @@
 /**
  * ─────────────────────────────────────────────────────────────
- *  BrightMinds — Course catalogue
+ *  BrightMinds - Course catalogue
  *  Edit THIS FILE to change course content. Nothing else needs
  *  to change when you add a course or tweak copy/pricing.
  *  `price` is in RUPEES (₹). The server converts it to paise.
@@ -18,7 +18,7 @@ export type Course = {
   subtitle: string;
   description: string;
   price: number;          // ₹ INR
-  originalPrice?: number; // ₹ INR — shown struck through
+  originalPrice?: number; // ₹ INR - shown struck through
   duration: string;
   mode: string;
   eligibility: string;
@@ -40,7 +40,7 @@ export const COURSES: Course[] = [
     tagline: 'New Batch',
     subtitle: 'Complete written and SSB preparation for the UPSC NDA & NA Examination',
     description:
-      'Six months of structured, mentor-led coaching covering the complete UPSC NDA syllabus. Mathematics and the General Ability Test are taught from the ground up against the official syllabus, with regular full-length mocks. Alongside the written paper, you are prepared for what most aspirants ignore until it is too late — the SSB interview, and the physical and medical standards. Taught by mentors who include serving and veteran officers.',
+      'Six months of structured, mentor-led coaching covering the complete UPSC NDA syllabus. Mathematics and the General Ability Test are taught from the ground up against the official syllabus, with regular full-length mocks. Alongside the written paper, you are prepared for what most aspirants ignore until it is too late - the SSB interview, and the physical and medical standards. Taught by mentors who include serving and veteran officers.',
     price: 499,
     originalPrice: 1500,
     duration: '6 months of live coaching',
@@ -50,16 +50,16 @@ export const COURSES: Course[] = [
     startsOn: 'Starts 11 April 2027',
     highlights: [
       {
-        title: 'Paper I — Mathematics',
+        title: 'Paper I - Mathematics',
         description: 'All 300 marks covered against the official UPSC syllabus, from basics to exam-level problem solving.',
       },
       {
-        title: 'Paper II — General Ability Test',
+        title: 'Paper II - General Ability Test',
         description: 'English and General Knowledge for the full 600 marks, taught topic by topic with regular revision.',
       },
       {
         title: 'SSB Interview Preparation',
-        description: 'Screening, psychological tests, GTO tasks and the personal interview — explained and practised, not left to chance.',
+        description: 'Screening, psychological tests, GTO tasks and the personal interview - explained and practised, not left to chance.',
       },
       {
         title: 'Full-Length Mock Tests',
@@ -76,7 +76,7 @@ export const COURSES: Course[] = [
     ],
     curriculum: [
       {
-        module: 'Paper I — Mathematics (300 marks)',
+        module: 'Paper I - Mathematics (300 marks)',
         points: [
           'Algebra, Matrices and Determinants',
           'Trigonometry',
@@ -86,7 +86,7 @@ export const COURSES: Course[] = [
         ],
       },
       {
-        module: 'Paper II — General Ability Test (600 marks)',
+        module: 'Paper II - General Ability Test (600 marks)',
         points: [
           'English: grammar, vocabulary, comprehension and cohesion (200 marks)',
           'Physics and Chemistry',
@@ -108,7 +108,7 @@ export const COURSES: Course[] = [
         points: [
           'Stage I: Officer Intelligence Rating, Picture Perception and Discussion',
           'Stage II: psychological tests, GTO tasks, personal interview and conference',
-          'Officer Like Qualities — what assessors actually look for',
+          'Officer Like Qualities - what assessors actually look for',
           'Physical fitness targets and common medical rejections',
         ],
       },
@@ -123,15 +123,15 @@ export const COURSES: Course[] = [
     faqs: [
       {
         q: 'Who can apply for the NDA?',
-        a: 'Unmarried candidates who have passed or are appearing for Class 12 (10+2). Candidates for the Air Force, Naval Academy and the Naval wing must have studied Physics, Chemistry and Mathematics in Class 12; the Army wing is open to any stream. UPSC publishes the exact age and date-of-birth window in each official notification — please confirm your eligibility there before applying.',
+        a: 'Unmarried candidates who have passed or are appearing for Class 12 (10+2). Candidates for the Air Force, Naval Academy and the Naval wing must have studied Physics, Chemistry and Mathematics in Class 12; the Army wing is open to any stream. UPSC publishes the exact age and date-of-birth window in each official notification - please confirm your eligibility there before applying.',
       },
       {
         q: 'What is the exam pattern?',
-        a: 'Two written papers: Mathematics (300 marks) and the General Ability Test (600 marks — English 200, General Knowledge 400), for a written total of 900 marks. There is negative marking. Candidates who clear the written paper go on to the SSB interview, which also carries 900 marks.',
+        a: 'Two written papers: Mathematics (300 marks) and the General Ability Test (600 marks - English 200, General Knowledge 400), for a written total of 900 marks. There is negative marking. Candidates who clear the written paper go on to the SSB interview, which also carries 900 marks.',
       },
       {
         q: 'Which exam sitting will I appear for?',
-        a: 'UPSC conducts the NDA examination twice a year — NDA (I) is normally written in April and NDA (II) around September. Your mentor helps you decide which sitting to target based on your class, your syllabus coverage and your readiness. Exact dates always come from the official UPSC notification, and we share every update in the WhatsApp community as soon as it is announced.'
+        a: 'UPSC conducts the NDA examination twice a year - NDA (I) is normally written in April and NDA (II) around September. Your mentor helps you decide which sitting to target based on your class, your syllabus coverage and your readiness. Exact dates always come from the official UPSC notification, and we share every update in the WhatsApp community as soon as it is announced.'
       },
       {
         q: 'Is ₹499 the full fee?',
@@ -159,7 +159,7 @@ export const getCourse = (idOrSlug: string): Course | undefined =>
 
 export const PRIMARY_COURSE = COURSES[0];
 
-/** Public WhatsApp community link — set VITE_WHATSAPP_COMMUNITY_LINK in .env */
+/** Public WhatsApp community link - set VITE_WHATSAPP_COMMUNITY_LINK in .env */
 export const WHATSAPP_COMMUNITY_LINK: string =
   import.meta.env.VITE_WHATSAPP_COMMUNITY_LINK || '';
 

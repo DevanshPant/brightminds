@@ -4,7 +4,7 @@
  *   npm run test:auth
  *
  * Creates a throwaway user, signs in as them for real, and exercises the
- * deployed security rules from the client side — proving a student can read
+ * deployed security rules from the client side - proving a student can read
  * their own data and cannot forge an enrolment. Cleans up after itself.
  *
  * Safe to run repeatedly. Touches only its own test documents.
@@ -46,7 +46,7 @@ const STUDENT = 'bm-test-student-' + Date.now();
 const OTHER = 'bm-test-other-' + Date.now();
 const cleanup = [];
 
-console.log(`\nStudent login — live test against ${PROJECT}\n`);
+console.log(`\nStudent login - live test against ${PROJECT}\n`);
 
 try {
   // ── sign in for real, the way the browser does ────────────────────────────
@@ -80,7 +80,7 @@ try {
   check('Server verifies that ID token', decoded.uid === STUDENT);
 
   // ── what a student may do ─────────────────────────────────────────────────
-  console.log('\nSecurity rules — student permissions');
+  console.log('\nSecurity rules - student permissions');
 
   // Profiles are written only by /api/register-login, so even a student's own
   // profile is off limits from the browser. That stops anyone backdating their
@@ -131,7 +131,7 @@ try {
         `expected 403, got ${readOther.status}`);
 
   // ── the money guard ───────────────────────────────────────────────────────
-  console.log('\nSecurity rules — the money guard');
+  console.log('\nSecurity rules - the money guard');
 
   // A PATCH to a non-existent path creates the document, which is exactly how
   // a student would try to mint themselves a free seat from the browser.

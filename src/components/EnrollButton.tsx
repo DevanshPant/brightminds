@@ -149,7 +149,7 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
         description={`One quick Google sign-in and your seat for ${course.title} is reserved while you pay.`}
       />
 
-      {/* Step 2 — contact number, used for the receipt and batch updates */}
+      {/* Step 2 - contact number, used for the receipt and batch updates */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="sm:max-w-md rounded-3xl border-primary/15 bg-gradient-golden">
           <DialogHeader>
@@ -215,7 +215,7 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
         </DialogContent>
       </Dialog>
 
-      {/* Paid, but we could not confirm it — the student needs their payment ID */}
+      {/* Paid, but we could not confirm it - the student needs their payment ID */}
       <Dialog open={Boolean(unconfirmed)} onOpenChange={(open) => !open && setUnconfirmed(null)}>
         <DialogContent className="sm:max-w-md rounded-3xl border-amber-300 bg-amber-50">
           <DialogHeader className="text-center sm:text-center">
@@ -225,7 +225,7 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
             <DialogTitle className="font-display text-2xl">Your payment went through</DialogTitle>
             <DialogDescription className="text-base leading-relaxed">
               We could not confirm your enrolment automatically. <strong>Your money is safe</strong> and
-              we will sort this out — please send us the reference below.
+              we will sort this out - please send us the reference below.
             </DialogDescription>
           </DialogHeader>
 
@@ -272,7 +272,7 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
         </DialogContent>
       </Dialog>
 
-      {/* Step 3 — success, receipt and the community link */}
+      {/* Step 3 - success, receipt and the community link */}
       <Dialog open={Boolean(success)} onOpenChange={(open) => !open && setSuccess(null)}>
         <DialogContent className="sm:max-w-md rounded-3xl border-primary/15 bg-gradient-golden">
           <DialogHeader className="text-center sm:text-center">
@@ -308,7 +308,7 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
               </div>
             ) : (
               <div className="rounded-2xl border border-primary/20 bg-background/70 p-4 text-sm text-muted-foreground">
-                We will email you the WhatsApp community link shortly — it will also appear on your
+                We will email you the WhatsApp community link shortly - it will also appear on your
                 dashboard.
               </div>
             )}

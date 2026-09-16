@@ -8,8 +8,8 @@ import { sendSignupEmail } from './_lib/email.js';
  * Auth: Firebase ID token. Body: { phone?: string }
  *
  * Records every sign-in against the student's profile so the admin can see who
- * has an account, not just who has paid. The admin is emailed once — on the
- * very first sign-in — because a mail per login would be unusable.
+ * has an account, not just who has paid. The admin is emailed once - on the
+ * very first sign-in - because a mail per login would be unusable.
  *
  * Written server-side so `users` stays read-only to the browser; a student
  * cannot backdate their own signup or inflate their login count.

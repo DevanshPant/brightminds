@@ -2,7 +2,7 @@ import { API_BASE } from '@/lib/api';
 
 /**
  * Downloads the student spreadsheet from the server. Built server-side so this
- * file and the one attached to enrolment emails are always identical — and so
+ * file and the one attached to enrolment emails are always identical - and so
  * no visitor pays for a ~1 MB spreadsheet library in the page bundle.
  */
 export async function downloadStudentWorkbook(token: string) {

@@ -87,7 +87,7 @@ if (apiKey?.startsWith('re_') && fromDomain) {
     });
 
     if (res.status === 401 || res.status === 403) {
-      // A "Sending access" key — the permission level we recommend — is not
+      // A "Sending access" key - the permission level we recommend - is not
       // allowed to list domains. That is not a broken key, so do not cry wolf:
       // the only conclusive test for a send-only key is an actual send.
       warn('This key cannot list domains, which is normal for a "Sending access" key.');
@@ -113,7 +113,7 @@ if (apiKey?.startsWith('re_') && fromDomain) {
         } else {
           // Only the DKIM and SPF records matter for SENDING. Resend also
           // offers a "Receiving" MX record for inbound mail, which we do not
-          // use — and which would outrank the real mail host and break the
+          // use - and which would outrank the real mail host and break the
           // domain's incoming email. A domain showing "partially_verified"
           // because only that record is pending is exactly what we want.
           const detail = await fetch(`https://api.resend.com/domains/${match.id}`, {
@@ -126,9 +126,9 @@ if (apiKey?.startsWith('re_') && fromDomain) {
           const receiving = records.filter((r) => /receiving/i.test(r.record || ''));
 
           if (sending.length && unverifiedSending.length === 0) {
-            ok(`"${fromDomain}" — all sending records verified (DKIM + SPF)`);
+            ok(`"${fromDomain}" - all sending records verified (DKIM + SPF)`);
             if (receiving.some((r) => r.status !== 'verified')) {
-              ok('"Receiving" MX is pending — correct, do NOT add it');
+              ok('"Receiving" MX is pending - correct, do NOT add it');
               console.log(`${D}       That record is for inbound mail and would override your${X}`);
               console.log(`${D}       real mail host, breaking email to this domain.${X}`);
             }

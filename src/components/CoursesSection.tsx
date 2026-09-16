@@ -98,7 +98,7 @@ const CoursesSection = () => {
                     <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                     <span>
                       <strong className="font-semibold text-foreground">{highlight.title}</strong>
-                      {' — '}
+                      {' - '}
                       {highlight.description}
                     </span>
                   </li>

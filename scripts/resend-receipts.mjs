@@ -6,7 +6,7 @@
  *   npm run resend:receipts -- --send --all   re-send to everyone, not just failures
  *
  * A student who has paid must end up with a receipt. If the send failed at the
- * time — a bad from-address, an expired key, Resend down — this fixes it after
+ * time - a bad from-address, an expired key, Resend down - this fixes it after
  * the cause is sorted, without touching the payment.
  */
 import { readFile } from 'node:fs/promises';
@@ -52,7 +52,7 @@ for (const doc of targets) {
 }
 
 if (!SEND) {
-  console.log(`\n${Y}Dry run — nothing sent.${X}`);
+  console.log(`\n${Y}Dry run - nothing sent.${X}`);
   console.log(`${D}Send for real:  npm run resend:receipts -- --send${X}\n`);
   process.exit(0);
 }

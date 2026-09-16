@@ -1,6 +1,6 @@
 /**
  * Checks that the Firebase credentials in .env are present, well-formed and
- * actually work — before you deploy and discover it at the checkout screen.
+ * actually work - before you deploy and discover it at the checkout screen.
  *
  *   npm run check:firebase
  *
@@ -79,17 +79,17 @@ for (const key of webVars) {
 }
 
 if (has('VITE_FIREBASE_STORAGE_BUCKET')) ok('VITE_FIREBASE_STORAGE_BUCKET');
-else warn('VITE_FIREBASE_STORAGE_BUCKET is empty (fine — nothing uses Storage yet)');
+else warn('VITE_FIREBASE_STORAGE_BUCKET is empty (fine - nothing uses Storage yet)');
 
 if (has('VITE_FIREBASE_MESSAGING_SENDER_ID')) ok('VITE_FIREBASE_MESSAGING_SENDER_ID');
-else warn('VITE_FIREBASE_MESSAGING_SENDER_ID is empty (fine — no push notifications)');
+else warn('VITE_FIREBASE_MESSAGING_SENDER_ID is empty (fine - no push notifications)');
 
 if (has('VITE_FIREBASE_API_KEY') && !/^AIza[\w-]{30,}$/.test(env.VITE_FIREBASE_API_KEY)) {
   fail('VITE_FIREBASE_API_KEY does not look like a Firebase web API key (should start with "AIza")');
 }
 
 if (has('VITE_FIREBASE_AUTH_DOMAIN') && !/\.(firebaseapp\.com|web\.app)$/.test(env.VITE_FIREBASE_AUTH_DOMAIN)) {
-  warn('VITE_FIREBASE_AUTH_DOMAIN usually ends in .firebaseapp.com — double-check it');
+  warn('VITE_FIREBASE_AUTH_DOMAIN usually ends in .firebaseapp.com - double-check it');
 }
 
 // ── Admin SDK credentials ───────────────────────────────────────────────────
@@ -114,7 +114,7 @@ if (has('FIREBASE_PRIVATE_KEY')) {
   // the wrong one is the single easiest mistake here, so name it explicitly.
   if (/^[0-9a-f]{20,80}$/i.test(key.trim())) {
     fail(
-      'FIREBASE_PRIVATE_KEY holds a plain hex string — that is the "private_key_id" field.\n' +
+      'FIREBASE_PRIVATE_KEY holds a plain hex string - that is the "private_key_id" field.\n' +
         '      You want "private_key", the long value just below it that starts with\n' +
         '      -----BEGIN PRIVATE KEY-----',
     );
@@ -123,7 +123,7 @@ if (has('FIREBASE_PRIVATE_KEY')) {
   } else if (!key.trimEnd().endsWith('-----END PRIVATE KEY-----')) {
     fail('FIREBASE_PRIVATE_KEY is missing the "-----END PRIVATE KEY-----" footer');
   } else if (key.split('\n').length < 3) {
-    fail('FIREBASE_PRIVATE_KEY has no line breaks — keep the \\n sequences from the JSON file');
+    fail('FIREBASE_PRIVATE_KEY has no line breaks - keep the \\n sequences from the JSON file');
   } else {
     ok('FIREBASE_PRIVATE_KEY looks well-formed');
   }
@@ -131,12 +131,12 @@ if (has('FIREBASE_PRIVATE_KEY')) {
 
 for (const [webKey, adminKey] of [['VITE_FIREBASE_PROJECT_ID', 'FIREBASE_PROJECT_ID']]) {
   if (has(webKey) && has(adminKey) && env[webKey] !== env[adminKey]) {
-    fail(`${webKey} and ${adminKey} point at different projects — they must match`);
+    fail(`${webKey} and ${adminKey} point at different projects - they must match`);
   }
 }
 
 if (has('FIREBASE_CLIENT_EMAIL') && !/^[^@]+@[^.]+\.iam\.gserviceaccount\.com$/.test(env.FIREBASE_CLIENT_EMAIL)) {
-  warn('FIREBASE_CLIENT_EMAIL usually ends in .iam.gserviceaccount.com — double-check it');
+  warn('FIREBASE_CLIENT_EMAIL usually ends in .iam.gserviceaccount.com - double-check it');
 }
 
 // ── Admin emails vs Firestore rules ─────────────────────────────────────────
@@ -157,7 +157,7 @@ if (has('VITE_ADMIN_EMAILS')) {
     ok('All admin emails are present in firestore.rules');
   }
 } else {
-  warn('VITE_ADMIN_EMAILS is empty — nobody will be able to open /admin');
+  warn('VITE_ADMIN_EMAILS is empty - nobody will be able to open /admin');
 }
 
 // ── Live connection ─────────────────────────────────────────────────────────
@@ -188,7 +188,7 @@ if (problems === 0 && (hasBlob || hasTriple)) {
       );
     } else if (/NOT_FOUND|5 NOT_FOUND/.test(message)) {
       console.log(
-        `${DIM}      Firestore database does not exist yet — create it in the Firebase console.${RESET}`,
+        `${DIM}      Firestore database does not exist yet - create it in the Firebase console.${RESET}`,
       );
     } else if (/DECODER|PEM|private key/i.test(message)) {
       console.log(

@@ -9,7 +9,7 @@ import { getRazorpay } from './_lib/razorpay.js';
  * Body: { courseId: string, phone?: string }
  * Auth: Firebase ID token.
  *
- * The client never sends an amount — the price is looked up server-side.
+ * The client never sends an amount - the price is looked up server-side.
  */
 export default async function handler(req, res) {
   if (applyCors(req, res)) return;

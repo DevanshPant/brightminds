@@ -16,16 +16,16 @@ import { useToast } from '@/hooks/use-toast';
 import { formatINR } from '@/config/course';
 import type { Enrollment } from '@/hooks/useEnrollments';
 
-/** Comma-separated list in VITE_ADMIN_EMAILS — must match firestore.rules. */
+/** Comma-separated list in VITE_ADMIN_EMAILS - must match firestore.rules. */
 const ADMIN_EMAILS = String(import.meta.env.VITE_ADMIN_EMAILS || '')
   .split(',')
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
 
 const formatDate = (value?: string) => {
-  if (!value) return '—';
+  if (!value) return '-';
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return '—';
+  if (Number.isNaN(date.getTime())) return '-';
   return date.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'short', timeStyle: 'short' });
 };
 
@@ -89,7 +89,7 @@ const Admin = () => {
   const enrolledUids = useMemo(() => new Set(paid.map((r) => r.uid)), [paid]);
   const conversion = students.length
     ? `${((enrolledUids.size / students.length) * 100).toFixed(0)}%`
-    : '—';
+    : '-';
 
   const handleExport = async () => {
     setExporting(true);
@@ -231,10 +231,10 @@ const Admin = () => {
                           <tr key={row.enrollmentId} className="border-t border-primary/10">
                             <td className="px-4 py-3 font-mono text-xs whitespace-nowrap">{row.receiptNo}</td>
                             <td className="px-4 py-3">
-                              <div className="font-medium text-foreground">{row.studentName || '—'}</div>
+                              <div className="font-medium text-foreground">{row.studentName || '-'}</div>
                               <div className="text-xs text-muted-foreground break-all">{row.email}</div>
                             </td>
-                            <td className="px-4 py-3 whitespace-nowrap">{row.phone || '—'}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">{row.phone || '-'}</td>
                             <td className="px-4 py-3">{row.courseTitle}</td>
                             <td className="px-4 py-3 font-semibold whitespace-nowrap">{formatINR(row.amount)}</td>
                             <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(row.paidAt)}</td>
@@ -274,10 +274,10 @@ const Admin = () => {
                           return (
                             <tr key={s.uid} className="border-t border-primary/10">
                               <td className="px-4 py-3">
-                                <div className="font-medium text-foreground">{s.fullName || s.displayName || '—'}</div>
+                                <div className="font-medium text-foreground">{s.fullName || s.displayName || '-'}</div>
                                 <div className="text-xs text-muted-foreground break-all">{s.email}</div>
                               </td>
-                              <td className="px-4 py-3 whitespace-nowrap">{s.phone || '—'}</td>
+                              <td className="px-4 py-3 whitespace-nowrap">{s.phone || '-'}</td>
                               <td className="px-4 py-3">
                                 <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                                   enrolled ? 'bg-green-100 text-green-700' : 'bg-secondary text-muted-foreground'
@@ -287,7 +287,7 @@ const Admin = () => {
                               </td>
                               <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(s.signupAt)}</td>
                               <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(s.lastLoginAt)}</td>
-                              <td className="px-4 py-3 whitespace-nowrap">{s.loginCount ?? '—'}</td>
+                              <td className="px-4 py-3 whitespace-nowrap">{s.loginCount ?? '-'}</td>
                             </tr>
                           );
                         })}
