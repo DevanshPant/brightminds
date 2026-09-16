@@ -85,9 +85,45 @@ await test('reports configuration status without leaking secrets', async () => {
   assert.equal(res.body.configured.razorpayKeys, true);
   assert.equal(res.body.configured.razorpayMode, 'test');
   assert.equal(res.body.configured.whatsappLink, true);
-  assert.equal(res.body.configured.resend, false);
+  assert.equal(res.body.configured.resendApiKey, false);
   // No secret value may appear anywhere in the response.
   assert.doesNotMatch(JSON.stringify(res.body), /test_secret_abc123|whsec_test_xyz789/);
+});
+
+await test('flags a missing RESEND_FROM_EMAIL as a problem, not a pass', async () => {
+  // Without it the server silently falls back to resend.dev, which can only
+  // email the Resend account owner - so every student gets nothing.
+  const before = process.env.RESEND_FROM_EMAIL;
+  delete process.env.RESEND_FROM_EMAIL;
+  try {
+    const res = mockRes();
+    await health(mockReq({ method: 'GET' }), res);
+    assert.equal(res.body.configured.resendFromConfigured, false);
+    assert.equal(res.body.configured.canEmailStudents, false);
+    assert.equal(res.body.status, 'degraded');
+    assert.ok(
+      res.body.problems.some((p) => /RESEND_FROM_EMAIL/.test(p)),
+      'health did not name the missing variable',
+    );
+  } finally {
+    if (before !== undefined) process.env.RESEND_FROM_EMAIL = before;
+  }
+});
+
+await test('reports a working email setup as healthy', async () => {
+  const before = process.env.RESEND_FROM_EMAIL;
+  const beforeKey = process.env.RESEND_API_KEY;
+  process.env.RESEND_FROM_EMAIL = 'BrightMinds <noreply@brightmindsclasses.in>';
+  process.env.RESEND_API_KEY = 're_test_key';
+  try {
+    const res = mockRes();
+    await health(mockReq({ method: 'GET' }), res);
+    assert.equal(res.body.configured.canEmailStudents, true);
+    assert.equal(res.body.configured.resendFromResolved, 'BrightMinds <noreply@brightmindsclasses.in>');
+  } finally {
+    if (before !== undefined) process.env.RESEND_FROM_EMAIL = before; else delete process.env.RESEND_FROM_EMAIL;
+    process.env.RESEND_API_KEY = beforeKey;
+  }
 });
 
 console.log('\n/api/create-order');
