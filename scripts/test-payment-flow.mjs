@@ -14,7 +14,7 @@ process.env.ADMIN_EMAIL = 'admin@brightmindsclasses.in';
 process.env.SITE_URL = 'https://brightmindsclasses.in';
 
 const { verifyPaymentSignature, verifyWebhookSignature } = await import('../api/_lib/razorpay.js');
-const { buildReceiptEmail, buildAdminEmail } = await import('../api/_lib/email.js');
+const { buildReceiptEmail, buildAdminEmail, senderAddress } = await import('../api/_lib/email.js');
 const { getCourse, toPaise, COURSES } = await import('../api/_lib/courses.js');
 const { readRawBody, applyCors } = await import('../api/_lib/http.js');
 
@@ -183,6 +183,47 @@ test('admin notification carries the contact details', () => {
   assert.match(html, /aarav@example\.com/);
   assert.match(html, /9876543210/);
   assert.match(html, /BM-2026-0001/);
+});
+
+console.log('\nSender address');
+// A dashboard like Vercel stores quotes literally, unlike a .env file. A
+// from-address wrapped in quote marks is rejected by Resend AFTER the student
+// has paid, so every shape has to be normalised before it is sent.
+const senderFor = (value) => {
+  const before = process.env.RESEND_FROM_EMAIL;
+  process.env.RESEND_FROM_EMAIL = value;
+  try {
+    return senderAddress();
+  } finally {
+    process.env.RESEND_FROM_EMAIL = before;
+  }
+};
+
+test('strips double quotes pasted from a dashboard', () => {
+  assert.equal(
+    senderFor('"BrightMinds <noreply@brightmindsclasses.in>"'),
+    'BrightMinds <noreply@brightmindsclasses.in>',
+  );
+});
+
+test('leaves a correct address untouched', () => {
+  assert.equal(
+    senderFor('BrightMinds <noreply@brightmindsclasses.in>'),
+    'BrightMinds <noreply@brightmindsclasses.in>',
+  );
+  assert.equal(senderFor('noreply@brightmindsclasses.in'), 'noreply@brightmindsclasses.in');
+});
+
+test('trims stray whitespace', () => {
+  assert.equal(
+    senderFor('   BrightMinds <noreply@brightmindsclasses.in>   '),
+    'BrightMinds <noreply@brightmindsclasses.in>',
+  );
+});
+
+test('falls back to a sendable address rather than failing', () => {
+  assert.match(senderFor(''), /@/);
+  assert.match(senderFor('not an email at all'), /@/);
 });
 
 console.log('\nHTTP helpers');

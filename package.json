@@ -23,7 +23,8 @@
     "check:email": "node scripts/check-email.mjs",
     "send:whatsapp-link": "node scripts/send-whatsapp-link.mjs",
     "check:api": "node scripts/check-api-syntax.mjs",
-    "reset:data": "node scripts/reset-test-data.mjs"
+    "reset:data": "node scripts/reset-test-data.mjs",
+    "resend:receipts": "node scripts/resend-receipts.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

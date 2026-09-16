@@ -9,12 +9,43 @@ const BRAND = {
   border: '#F0E4C4',
 };
 
-const SITE_URL = process.env.SITE_URL || 'https://brightmindsclasses.in';
-const SUPPORT_EMAIL = process.env.ADMIN_EMAIL || 'hello@brightmindsclasses.in';
+/**
+ * Quotes are .env syntax, but a dashboard like Vercel stores them literally.
+ * A from-address of "Name <a@b.com>" WITH the quote characters is rejected by
+ * Resend, and the failure only shows up after a student has already paid.
+ * Strip them wherever an env var is read.
+ */
+const env = (name, fallback = '') => {
+  const raw = (process.env[name] || '').trim();
+  const unquoted =
+    (raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))
+      ? raw.slice(1, -1).trim()
+      : raw;
+  return unquoted || fallback;
+};
+
+const SITE_URL = env('SITE_URL', 'https://brightmindsclasses.in');
+const SUPPORT_EMAIL = env('ADMIN_EMAIL', 'hello@brightmindsclasses.in');
+
+/** Resend accepts `a@b.com` or `Name <a@b.com>` and nothing else. */
+export const senderAddress = () => {
+  const from = env('RESEND_FROM_EMAIL');
+  if (!from) return 'BrightMinds <onboarding@resend.dev>';
+  if (/^[^<>@\s]+@[^<>@\s]+$/.test(from)) return from;
+  if (/^[^<>]+<[^<>@\s]+@[^<>@\s]+>$/.test(from)) return from;
+  // Recover a usable address from something malformed rather than failing.
+  const inner = from.match(/<([^<>]+@[^<>]+)>/)?.[1] || from.match(/([^\s<>"']+@[^\s<>"']+)/)?.[1];
+  if (inner) {
+    console.warn(`RESEND_FROM_EMAIL was malformed (${from}); using <${inner}>`);
+    return `BrightMinds <${inner}>`;
+  }
+  console.error(`RESEND_FROM_EMAIL is unusable (${from}); falling back to resend.dev`);
+  return 'BrightMinds <onboarding@resend.dev>';
+};
 
 let cachedResend = null;
 function getResend() {
-  const apiKey = process.env.RESEND_API_KEY;
+  const apiKey = env('RESEND_API_KEY');
   if (!apiKey) return null;
   if (!cachedResend) cachedResend = new Resend(apiKey);
   return cachedResend;
@@ -232,8 +263,8 @@ export async function sendSignupEmail(user) {
   try {
     const { subject, html } = buildSignupEmail(user);
     const response = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'BrightMinds <onboarding@resend.dev>',
-      to: process.env.ADMIN_EMAIL || SUPPORT_EMAIL,
+      from: senderAddress(),
+      to: env('ADMIN_EMAIL', SUPPORT_EMAIL),
       subject,
       html,
     });
@@ -257,8 +288,8 @@ export async function sendEnrollmentEmails(enrollment) {
     return { studentEmailSent: false, adminEmailSent: false, reason: 'not-configured' };
   }
 
-  const from = process.env.RESEND_FROM_EMAIL || 'BrightMinds <onboarding@resend.dev>';
-  const adminEmail = process.env.ADMIN_EMAIL || SUPPORT_EMAIL;
+  const from = senderAddress();
+  const adminEmail = env('ADMIN_EMAIL', SUPPORT_EMAIL);
   const result = { studentEmailSent: false, adminEmailSent: false };
 
   if (enrollment.email) {
