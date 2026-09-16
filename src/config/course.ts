@@ -41,13 +41,13 @@ export const COURSES: Course[] = [
     subtitle: 'Complete written + SSB preparation for the UPSC NDA & NA Examination (I), April 2027',
     description:
       'A structured, mentor-led batch built around one target: the UPSC NDA & NA Examination (I) in April 2027. Mathematics and the General Ability Test are taught from the ground up against the official UPSC syllabus, with regular full-length mocks. Alongside the written paper, you are prepared for what most aspirants ignore until it is too late — the SSB interview, and the physical and medical standards. Taught by mentors who include serving and veteran officers.',
-    price: 500,
+    price: 499,
     originalPrice: 1500,
-    duration: 'Full course until the April 2027 exam',
+    duration: '6 months of live coaching',
     mode: 'Live online + recordings',
     eligibility: 'Class 11, 12 & 12th-pass aspirants',
     seats: 'Limited seats per batch',
-    startsOn: 'Batch start date announced on the WhatsApp community',
+    startsOn: 'Starts 11 April 2027',
     highlights: [
       {
         title: 'Paper I — Mathematics',
@@ -134,8 +134,8 @@ export const COURSES: Course[] = [
         a: 'UPSC normally issues the NDA & NA (I) notification in December and holds the written exam in April. Treat April 2027 as the target and confirm the exact dates from the official UPSC notification when it is released — we share every update in the WhatsApp community as soon as it is announced.',
       },
       {
-        q: 'Is ₹500 the full fee?',
-        a: 'Yes. ₹500 is a one-time payment for the complete programme. There are no hidden or recurring charges.',
+        q: 'Is ₹499 the full fee?',
+        a: 'Yes. ₹499 is a one-time payment for the full 6-month programme. There are no hidden or recurring charges.',
       },
       {
         q: 'What happens right after I pay?',

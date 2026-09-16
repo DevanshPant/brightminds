@@ -160,7 +160,7 @@ if (process.argv.includes('--send') && problems === 0 && apiKey) {
     const { subject, html } = buildReceiptEmail({
       studentName: 'Test Student',
       courseTitle: 'NDA-1 April 2027',
-      amount: 500,
+      amount: 499,
       receiptNo: 'BM-TEST-0001',
       razorpayPaymentId: 'pay_TEST',
       razorpayOrderId: 'order_TEST',

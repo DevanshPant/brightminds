@@ -10,7 +10,7 @@ export const COURSES = {
   'nda-1-april-2027': {
     id: 'nda-1-april-2027',
     title: 'NDA-1 April 2027',
-    price: 500, // ₹ INR
+    price: 499, // ₹ INR
     currency: 'INR',
   },
 };
