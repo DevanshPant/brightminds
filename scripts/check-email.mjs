@@ -110,13 +110,36 @@ if (apiKey?.startsWith('re_') && fromDomain) {
             `"${fromDomain}" is not added to your Resend account, so every send will fail.`,
             'Add it at resend.com -> Domains, or set RESEND_FROM_EMAIL to a resend.dev address for now.',
           );
-        } else if (match.status !== 'verified') {
-          fail(
-            `"${fromDomain}" is added but NOT verified (status: ${match.status}).`,
-            'Finish the DNS records Resend shows you, then re-run this check.',
-          );
         } else {
-          ok(`"${fromDomain}" is verified in Resend`);
+          // Only the DKIM and SPF records matter for SENDING. Resend also
+          // offers a "Receiving" MX record for inbound mail, which we do not
+          // use — and which would outrank the real mail host and break the
+          // domain's incoming email. A domain showing "partially_verified"
+          // because only that record is pending is exactly what we want.
+          const detail = await fetch(`https://api.resend.com/domains/${match.id}`, {
+            headers: { Authorization: `Bearer ${apiKey}` },
+          }).then((r) => r.json()).catch(() => ({}));
+
+          const records = detail.records || [];
+          const sending = records.filter((r) => /dkim|spf/i.test(r.record || ''));
+          const unverifiedSending = sending.filter((r) => r.status !== 'verified');
+          const receiving = records.filter((r) => /receiving/i.test(r.record || ''));
+
+          if (sending.length && unverifiedSending.length === 0) {
+            ok(`"${fromDomain}" — all sending records verified (DKIM + SPF)`);
+            if (receiving.some((r) => r.status !== 'verified')) {
+              ok('"Receiving" MX is pending — correct, do NOT add it');
+              console.log(`${D}       That record is for inbound mail and would override your${X}`);
+              console.log(`${D}       real mail host, breaking email to this domain.${X}`);
+            }
+          } else if (match.status === 'verified') {
+            ok(`"${fromDomain}" is verified in Resend`);
+          } else {
+            fail(
+              `"${fromDomain}" sending records are not all verified (domain status: ${match.status}).`,
+              `Pending: ${unverifiedSending.map((r) => `${r.record} ${r.type} ${r.name}`).join(', ') || 'unknown'}`,
+            );
+          }
         }
       }
 
