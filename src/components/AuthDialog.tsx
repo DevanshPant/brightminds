@@ -4,8 +4,6 @@ import { useAuth } from '@/contexts/auth-context';
 import { getErrorMessage } from '@/lib/errors';
 import { useToast } from '@/hooks/use-toast';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
-import PhoneSignIn from '@/components/PhoneSignIn';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ShieldCheck, Sparkles, AlertCircle } from 'lucide-react';
 
 type Props = {
@@ -54,18 +52,7 @@ const AuthDialog = ({
 
         {configured ? (
           <div className="space-y-4 pt-2">
-            <Tabs defaultValue="google" className="w-full">
-              <TabsList className="w-full grid grid-cols-2 mb-4">
-                <TabsTrigger value="google">Google</TabsTrigger>
-                <TabsTrigger value="phone">Mobile number</TabsTrigger>
-              </TabsList>
-              <TabsContent value="google">
-                <GoogleSignInButton onClick={handleSignIn} loading={busy} />
-              </TabsContent>
-              <TabsContent value="phone">
-                <PhoneSignIn onSignedIn={() => onOpenChange(false)} />
-              </TabsContent>
-            </Tabs>
+            <GoogleSignInButton onClick={handleSignIn} loading={busy} />
             <p className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
               <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
               We only read your name, email and profile picture. By continuing you agree to our{' '}

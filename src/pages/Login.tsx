@@ -4,8 +4,6 @@ import { AlertCircle, ArrowLeft, GraduationCap, Loader2, MessageCircle, Receipt,
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import GoogleSignInButton from '@/components/GoogleSignInButton';
-import PhoneSignIn from '@/components/PhoneSignIn';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/auth-context';
 import { getErrorMessage } from '@/lib/errors';
 import { useToast } from '@/hooks/use-toast';
@@ -83,18 +81,7 @@ const Login = () => {
                 </div>
               ) : configured ? (
                 <>
-                  <Tabs defaultValue="google" className="w-full">
-                    <TabsList className="w-full grid grid-cols-2 mb-5">
-                      <TabsTrigger value="google">Google</TabsTrigger>
-                      <TabsTrigger value="phone">Mobile number</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="google">
-                      <GoogleSignInButton onClick={handleSignIn} loading={busy} />
-                    </TabsContent>
-                    <TabsContent value="phone">
-                      <PhoneSignIn onSignedIn={() => navigate(redirectTo, { replace: true })} />
-                    </TabsContent>
-                  </Tabs>
+                  <GoogleSignInButton onClick={handleSignIn} loading={busy} />
                   <p className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed mt-5">
                     <ShieldCheck className="w-4 h-4 text-primary shrink-0 mt-0.5" />
                     <span>
