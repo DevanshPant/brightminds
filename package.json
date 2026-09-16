@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "check:courses": "node scripts/check-courses.mjs",
     "test:payments": "node scripts/test-payment-flow.mjs",
-    "verify": "npm run check:courses && npm run test:payments && npm run test:api && npm run build",
+    "verify": "npm run check:courses && npm run check:api && npm run test:payments && npm run test:api && npm run build",
     "test:api": "node scripts/test-api-handlers.mjs",
     "check:firebase": "node scripts/check-firebase.mjs",
     "firebase:deploy": "npx -y firebase-tools@latest deploy --only firestore:rules,firestore:indexes",
@@ -21,7 +21,8 @@
     "test:auth": "node scripts/test-auth-rules.mjs",
     "backfill:users": "node scripts/backfill-users.mjs",
     "check:email": "node scripts/check-email.mjs",
-    "send:whatsapp-link": "node scripts/send-whatsapp-link.mjs"
+    "send:whatsapp-link": "node scripts/send-whatsapp-link.mjs",
+    "check:api": "node scripts/check-api-syntax.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

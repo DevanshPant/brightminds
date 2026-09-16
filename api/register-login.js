@@ -25,10 +25,15 @@ export default async function handler(req, res) {
     return fail(res, error.status || 401, error.message, error.cause);
   }
 
-  const { phone, fullName } = parseJsonBody(req);
+  const { phone, fullName, email } = parseJsonBody(req);
   const cleanPhone = typeof phone === 'string' ? phone.replace(/[^\d+]/g, '').slice(0, 15) : '';
   // The student can correct the name Google gave us.
   const cleanName = typeof fullName === 'string' ? fullName.trim().slice(0, 80) : '';
+  // Phone sign-in carries no email, so the student supplies one for their receipt.
+  const cleanEmail =
+    typeof email === 'string' && /^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email.trim())
+      ? email.trim().toLowerCase().slice(0, 160)
+      : '';
 
   try {
     const db = adminDb();
@@ -43,7 +48,8 @@ export default async function handler(req, res) {
 
       const next = {
         uid: user.uid,
-        email: user.email ?? null,
+        email: user.email || cleanEmail || existing?.email || null,
+        signInMethod: user.firebase?.sign_in_provider || existing?.signInMethod || null,
         displayName: user.name || user.displayName || existing?.displayName || null,
         photoURL: user.picture || existing?.photoURL || null,
         emailVerified: Boolean(user.email_verified),
@@ -54,7 +60,10 @@ export default async function handler(req, res) {
       };
       if (cleanName) next.fullName = cleanName;
       else if (existing?.fullName) next.fullName = existing.fullName;
-      if (cleanPhone) next.phone = cleanPhone;
+      // A verified phone from the token beats anything typed in a form.
+      const tokenPhone = user.phone_number || '';
+      if (tokenPhone) next.phone = tokenPhone.replace(/^\+91/, '');
+      else if (cleanPhone) next.phone = cleanPhone;
       else if (existing?.phone) next.phone = existing.phone;
 
       tx.set(ref, next, { merge: true });

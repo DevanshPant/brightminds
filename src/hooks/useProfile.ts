@@ -8,6 +8,7 @@ export type Profile = {
   email: string | null;
   displayName: string | null;
   fullName?: string | null;
+  signInMethod?: string | null;
   phone?: string | null;
   signupAt?: string;
   lastLoginAt?: string;
@@ -46,8 +47,14 @@ export const useProfile = () => {
     return unsubscribe;
   }, [user]);
 
-  /** The profile write happens server-side and may lag the first render. */
+  /**
+   * We need both a number and an email: phone sign-in gives no email (and the
+   * receipt has nowhere to go), Google gives no number. The write happens
+   * server-side, so this can lag the first render by a moment.
+   */
   const needsPhone = Boolean(user) && !loading && !profile?.phone;
+  const needsEmail = Boolean(user) && !loading && !(profile?.email || user?.email);
+  const needsProfile = needsPhone || needsEmail;
 
-  return { profile, loading, needsPhone };
+  return { profile, loading, needsPhone, needsEmail, needsProfile };
 };

@@ -11,6 +11,8 @@ export type AuthContextValue = {
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
   getToken: () => Promise<string>;
+  /** Report a sign-in that happened outside signInWithGoogle (e.g. phone OTP). */
+  recordSignIn: (user: User) => Promise<void>;
 };
 
 /**

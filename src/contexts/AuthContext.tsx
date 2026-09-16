@@ -95,6 +95,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await fbSignOut(auth);
       },
 
+      recordSignIn: (u: User) => recordLogin(u),
+
       getToken: async () => {
         if (!auth?.currentUser) throw new Error('You need to sign in first.');
         return auth.currentUser.getIdToken();

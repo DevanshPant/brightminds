@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Loader2, Phone, ShieldCheck } from 'lucide-react';
+import { Loader2, UserCircle, ShieldCheck } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,17 +24,18 @@ import { getErrorMessage } from '@/lib/errors';
  */
 const CompleteProfileDialog = () => {
   const { user, getToken, signOut } = useAuth();
-  const { profile, needsPhone } = useProfile();
+  const { profile, needsPhone, needsEmail, needsProfile } = useProfile();
 
   const [open, setOpen] = useState(false);
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setOpen(needsPhone);
-  }, [needsPhone]);
+    setOpen(needsProfile);
+  }, [needsProfile]);
 
   useEffect(() => {
     // Pre-fill from the Google account; the student can correct it.
@@ -49,8 +50,12 @@ const CompleteProfileDialog = () => {
       setError('Please enter your full name.');
       return;
     }
-    if (digits.length !== 10) {
+    if (needsPhone && digits.length !== 10) {
       setError('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (needsEmail && !/^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email.trim())) {
+      setError('Please enter a valid email address for your receipt.');
       return;
     }
 
@@ -58,7 +63,11 @@ const CompleteProfileDialog = () => {
     setSaving(true);
     try {
       const token = await getToken();
-      await apiPost('/api/register-login', { phone: digits, fullName: fullName.trim() }, token);
+      await apiPost(
+        '/api/register-login',
+        { phone: digits, fullName: fullName.trim(), email: email.trim() },
+        token,
+      );
       setOpen(false);
     } catch (err) {
       setError(getErrorMessage(err, 'Could not save your details. Please try again.'));
@@ -78,11 +87,11 @@ const CompleteProfileDialog = () => {
       >
         <DialogHeader className="text-center sm:text-center">
           <div className="mx-auto mb-4 w-14 h-14 rounded-2xl bg-gradient-accent flex items-center justify-center shadow-golden">
-            <Phone className="w-7 h-7 text-foreground" />
+            <UserCircle className="w-7 h-7 text-foreground" />
           </div>
           <DialogTitle className="font-display text-2xl">One quick detail</DialogTitle>
           <DialogDescription className="text-base leading-relaxed">
-            We need a mobile number to reach you about batch timings and class updates.
+            Just so we can reach you about batch timings and send your receipt.
           </DialogDescription>
         </DialogHeader>
 
@@ -102,6 +111,26 @@ const CompleteProfileDialog = () => {
             />
           </div>
 
+          {needsEmail && (
+            <div className="space-y-2">
+              <Label htmlFor="profile-email">Email address</Label>
+              <Input
+                id="profile-email"
+                type="email"
+                autoComplete="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError('');
+                }}
+                className="h-11"
+              />
+              <p className="text-xs text-muted-foreground">Your payment receipt is sent here.</p>
+            </div>
+          )}
+
+          {needsPhone && (
           <div className="space-y-2">
             <Label htmlFor="profile-phone">Mobile number</Label>
             <div className="flex items-center gap-2">
@@ -125,6 +154,7 @@ const CompleteProfileDialog = () => {
               />
             </div>
           </div>
+          )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
