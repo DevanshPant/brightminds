@@ -38,16 +38,16 @@ export const COURSES: Course[] = [
     title: 'NDA-1 April 2027',
     heading: 'Your Journey to the Academy Starts Here.',
     tagline: 'New Batch',
-    subtitle: 'Complete written and SSB preparation for the UPSC NDA & NA Examination',
+    subtitle: 'Complete written exam preparation for the UPSC NDA & NA Examination',
     description:
-      'Six months of structured, mentor-led coaching covering the complete UPSC NDA syllabus. Mathematics and the General Ability Test are taught from the ground up against the official syllabus, with regular full-length mocks. Alongside the written paper, you are prepared for what most aspirants ignore until it is too late - the SSB interview, and the physical and medical standards. Taught by mentors who include serving and veteran officers.',
+      'Six months of structured, mentor-led online coaching covering the complete UPSC NDA written syllabus. Mathematics and the General Ability Test are taught from the ground up against the official syllabus, with regular full-length mocks and detailed analysis of every paper.',
     price: 499,
     originalPrice: 1500,
-    duration: '6 months of live coaching',
+    duration: '6 months of online coaching',
     mode: 'Live online + recordings',
     eligibility: 'Class 11, 12 & 12th-pass aspirants',
     seats: 'Limited seats per batch',
-    startsOn: 'Starts 11 April 2027',
+    startsOn: 'Batch starts 27 April 2026',
     highlights: [
       {
         title: 'Paper I - Mathematics',
@@ -58,20 +58,8 @@ export const COURSES: Course[] = [
         description: 'English and General Knowledge for the full 600 marks, taught topic by topic with regular revision.',
       },
       {
-        title: 'SSB Interview Preparation',
-        description: 'Screening, psychological tests, GTO tasks and the personal interview - explained and practised, not left to chance.',
-      },
-      {
         title: 'Full-Length Mock Tests',
         description: 'Timed papers in the real exam pattern, with negative marking, followed by detailed analysis of every mistake.',
-      },
-      {
-        title: 'Officer Mentorship',
-        description: 'Guidance from serving and veteran officers who have been through the selection process themselves.',
-      },
-      {
-        title: 'Physical & Medical Readiness',
-        description: 'Fitness targets and the common medical rejections, so nothing avoidable stands between you and selection.',
       },
     ],
     curriculum: [
@@ -103,22 +91,12 @@ export const COURSES: Course[] = [
           'Performance review after every paper',
         ],
       },
-      {
-        module: 'SSB Interview & Beyond',
-        points: [
-          'Stage I: Officer Intelligence Rating, Picture Perception and Discussion',
-          'Stage II: psychological tests, GTO tasks, personal interview and conference',
-          'Officer Like Qualities - what assessors actually look for',
-          'Physical fitness targets and common medical rejections',
-        ],
-      },
     ],
     outcomes: [
       'Complete coverage of the UPSC NDA written syllabus, Mathematics and GAT',
       'Exam temperament built through timed, full-length mocks',
       'A clear attempt strategy that accounts for negative marking',
-      'Real understanding of the SSB process instead of second-hand advice',
-      'Direct access to officer mentors through the BrightMinds community',
+      'Regular doubt support through the BrightMinds student community',
     ],
     faqs: [
       {
@@ -127,7 +105,7 @@ export const COURSES: Course[] = [
       },
       {
         q: 'What is the exam pattern?',
-        a: 'Two written papers: Mathematics (300 marks) and the General Ability Test (600 marks - English 200, General Knowledge 400), for a written total of 900 marks. There is negative marking. Candidates who clear the written paper go on to the SSB interview, which also carries 900 marks.',
+        a: 'Two written papers: Mathematics (300 marks) and the General Ability Test (600 marks - English 200, General Knowledge 400), for a written total of 900 marks. There is negative marking. This course covers the written examination; candidates who clear it are then called for the SSB interview conducted by the Services Selection Board.',
       },
       {
         q: 'Which exam sitting will I appear for?',
@@ -144,10 +122,6 @@ export const COURSES: Course[] = [
       {
         q: 'What if I miss a live class?',
         a: 'Every session is recorded and shared in the community, so nothing is missed.',
-      },
-      {
-        q: 'Do you prepare us for the SSB as well?',
-        a: 'Yes. SSB preparation is built into the course rather than sold separately, and is guided by mentors who have been through the selection process themselves.',
       },
     ],
     active: true,

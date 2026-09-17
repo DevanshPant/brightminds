@@ -231,7 +231,7 @@ const CoursePage = () => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-gradient-accent p-8 sm:p-12 text-center shadow-golden-lg">
             <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-4">
-              Ready to give your child direction?
+              Ready to begin your NDA journey?
             </h2>
             <p className="text-foreground/80 mb-8 max-w-xl mx-auto leading-relaxed">
               {course.seats ? `${course.seats}. ` : ''}Enrol in under two minutes - sign in with Google,
