@@ -16,7 +16,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
 import { useEnrollments } from '@/hooks/useEnrollments';
-import { COURSES, formatINR, WHATSAPP_COMMUNITY_LINK } from '@/config/course';
+import { COURSES, formatINR } from '@/config/course';
 
 const formatDate = (value?: string) => {
   if (!value) return '-';
@@ -115,7 +115,8 @@ const Dashboard = () => {
             ) : (
               <div className="space-y-5">
                 {enrollments.map((enrollment) => {
-                  const whatsappLink = enrollment.whatsappLink || WHATSAPP_COMMUNITY_LINK;
+                  // Read from their own enrolment; never from a public variable.
+                  const whatsappLink = enrollment.whatsappLink || null;
                   return (
                     <article
                       key={enrollment.enrollmentId}

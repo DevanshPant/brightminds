@@ -133,9 +133,12 @@ export const getCourse = (idOrSlug: string): Course | undefined =>
 
 export const PRIMARY_COURSE = COURSES[0];
 
-/** Public WhatsApp community link - set VITE_WHATSAPP_COMMUNITY_LINK in .env */
-export const WHATSAPP_COMMUNITY_LINK: string =
-  import.meta.env.VITE_WHATSAPP_COMMUNITY_LINK || '';
+/*
+ * The WhatsApp community link is deliberately NOT exposed here. A VITE_ value
+ * is compiled into the JavaScript of every page, so publishing the invite
+ * would let anyone join without paying. It reaches a student only through
+ * their own enrolment record, which Firestore rules restrict to them.
+ */
 
 export const formatINR = (amount: number) =>
   new Intl.NumberFormat('en-IN', {

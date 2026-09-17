@@ -10,7 +10,6 @@ interface ImportMetaEnv {
   readonly VITE_FIREBASE_APP_ID?: string;
 
   // Courses, payments and admin
-  readonly VITE_WHATSAPP_COMMUNITY_LINK?: string;
   readonly VITE_ADMIN_EMAILS?: string;
   readonly VITE_API_BASE_URL?: string;
 

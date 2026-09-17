@@ -26,7 +26,7 @@ import { useEnrollments } from '@/hooks/useEnrollments';
 import { useProfile } from '@/hooks/useProfile';
 import { useRazorpay } from '@/hooks/useRazorpay';
 import { useToast } from '@/hooks/use-toast';
-import { formatINR, WHATSAPP_COMMUNITY_LINK, type Course } from '@/config/course';
+import { formatINR, type Course } from '@/config/course';
 import type { VerifyPaymentResponse } from '@/lib/api';
 import { getErrorMessage } from '@/lib/errors';
 
@@ -113,7 +113,8 @@ const EnrollButton = ({ course, size = 'lg', variant = 'hero', className, label 
     }
   };
 
-  const whatsappLink = success?.whatsappLink || WHATSAPP_COMMUNITY_LINK;
+  // Comes back from /api/verify-payment, which only answers a paid enrolment.
+  const whatsappLink = success?.whatsappLink || null;
 
   const buttonLabel = alreadyEnrolled
     ? 'Go to my dashboard'
