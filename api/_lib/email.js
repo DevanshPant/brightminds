@@ -129,7 +129,7 @@ export function buildReceiptEmail(enrollment) {
       <div style="margin:28px 0 8px;padding:22px;background:#F0FFF4;border:1px solid #C6F6D5;border-radius:16px;text-align:center;">
         <div style="font-size:17px;font-weight:700;color:${BRAND.ink};margin-bottom:6px;">One last step - join the community</div>
         <p style="margin:0 0 18px;font-size:14px;color:${BRAND.muted};line-height:1.6;">
-          Batch timings, session links, recordings and study material are shared <strong>only</strong> in our private WhatsApp community. Please join now so you do not miss the first session.
+          Batch timings, class links and study material are shared <strong>only</strong> in our private WhatsApp community. Please join now so you do not miss the first session.
         </p>
         ${whatsappButton(whatsappLink, 'Join the WhatsApp community')}
         <p style="margin:16px 0 0;font-size:12px;color:${BRAND.muted};word-break:break-all;">

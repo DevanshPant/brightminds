@@ -25,7 +25,8 @@
     "check:api": "node scripts/check-api-syntax.mjs",
     "reset:data": "node scripts/reset-test-data.mjs",
     "resend:receipts": "node scripts/resend-receipts.mjs",
-    "backfill:whatsapp": "node scripts/backfill-whatsapp.mjs"
+    "backfill:whatsapp": "node scripts/backfill-whatsapp.mjs",
+    "test:enrolment": "node scripts/test-enrolment-flow.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

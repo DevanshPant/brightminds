@@ -44,7 +44,7 @@ export const COURSES: Course[] = [
     price: 499,
     originalPrice: 1500,
     duration: '6 months of online coaching',
-    mode: 'Live online + recordings',
+    mode: 'Live online classes',
     eligibility: 'Class 11, 12 & 12th-pass aspirants',
     seats: 'Limited seats per batch',
     startsOn: 'Batch starts 27 April 2026',
@@ -121,7 +121,7 @@ export const COURSES: Course[] = [
       },
       {
         q: 'What if I miss a live class?',
-        a: 'Every session is recorded and shared in the community, so nothing is missed.',
+        a: 'Let your mentor know in the community and they will help you cover what you missed, so you do not fall behind.',
       },
     ],
     active: true,
