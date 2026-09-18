@@ -3,7 +3,7 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Mail, MapPin, Send, Clock, CheckCircle } from 'lucide-react';
+import { Mail, MapPin, Phone, Send, Clock, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const ContactSection = () => {
@@ -102,16 +102,34 @@ const ContactSection = () => {
       icon: Mail,
       label: 'Email Us',
       value: 'hello@brightminds.in',
+      href: 'mailto:hello@brightminds.in',
       subtext: 'Quick response guaranteed',
     },
     {
+      icon: Phone,
+      label: 'Call Us',
+      value: '+91 99605 94024',
+      href: 'tel:+919960594024',
+      subtext: 'Monday to Saturday, 9:00 AM - 7:00 PM',
+    },
+    {
       icon: MapPin,
-      label: 'Visit Us',
+      label: 'Branch 1 - Ahilyanagar',
       value: (
         <>
           1st floor, Shivshambho Towers, Tapovan Road, Behind Saibaba Mandir, Nirmalnagar, Ahilyanagar
           <br />
           414003
+        </>
+      ),
+      subtext: 'Maharashtra, India',
+    },
+    {
+      icon: MapPin,
+      label: 'Branch 2 - Karad',
+      value: (
+        <>
+          2nd Floor, Raje Heights Building, Opp. SGM College, Behind Mardani Hotel, Vidyanagar, Saidapur, Karad
         </>
       ),
       subtext: 'Maharashtra, India',
@@ -173,7 +191,17 @@ const ContactSection = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground font-medium mb-1">{item.label}</p>
-                    <p className="font-display font-semibold text-foreground">{item.value}</p>
+                    {/* A phone or email is only useful if it can be tapped. */}
+                    {item.href ? (
+                      <a
+                        href={item.href}
+                        className="font-display font-semibold text-foreground hover:text-primary transition-colors duration-300"
+                      >
+                        {item.value}
+                      </a>
+                    ) : (
+                      <p className="font-display font-semibold text-foreground">{item.value}</p>
+                    )}
                     <p className="text-xs text-muted-foreground mt-0.5">{item.subtext}</p>
                   </div>
                 </div>

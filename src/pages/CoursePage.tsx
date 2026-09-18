@@ -36,7 +36,7 @@ const CoursePage = () => {
     { icon: Clock, label: 'Duration', value: course.duration },
     { icon: Monitor, label: 'Format', value: course.mode },
     { icon: Users, label: 'Who it is for', value: course.eligibility },
-    { icon: CalendarDays, label: 'Next batch', value: course.startsOn || 'Announced soon' },
+    { icon: CalendarDays, label: 'Batch Starts', value: course.startsOn || 'Announced soon' },
   ];
 
   return (
@@ -159,49 +159,23 @@ const CoursePage = () => {
         </div>
       </section>
 
-      {/* Curriculum + outcomes */}
+      {/* Outcomes */}
       <section className="py-16 sm:py-20 lg:py-24 bg-gradient-golden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid lg:grid-cols-2 gap-12 lg:gap-16">
-          <div>
-            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-8">
-              Week by week
-            </h2>
-            <ol className="space-y-5">
-              {course.curriculum.map((item, index) => (
-                <li key={item.module} className="relative pl-12">
-                  <span className="absolute left-0 top-0 w-9 h-9 rounded-xl bg-gradient-accent flex items-center justify-center font-display font-bold text-foreground shadow-golden">
-                    {index + 1}
-                  </span>
-                  <h3 className="font-display text-lg font-bold text-foreground mb-2">{item.module}</h3>
-                  <ul className="space-y-1.5">
-                    {item.points.map((point) => (
-                      <li key={point} className="flex items-start gap-2 text-sm text-muted-foreground">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-2" />
-                        {point}
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div>
-            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-8">
-              What your child walks away with
-            </h2>
-            <ul className="space-y-4">
-              {course.outcomes.map((outcome) => (
-                <li
-                  key={outcome}
-                  className="flex items-start gap-3 rounded-2xl bg-background border border-primary/10 px-5 py-4"
-                >
-                  <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                  <span className="text-foreground/85 leading-relaxed">{outcome}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-8 text-center">
+            What you walk away with
+          </h2>
+          <ul className="space-y-4">
+            {course.outcomes.map((outcome) => (
+              <li
+                key={outcome}
+                className="flex items-start gap-3 rounded-2xl bg-background border border-primary/10 px-5 py-4"
+              >
+                <Check className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <span className="text-foreground/85 leading-relaxed">{outcome}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

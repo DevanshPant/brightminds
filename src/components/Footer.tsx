@@ -1,4 +1,4 @@
-import { Mail, MapPin } from 'lucide-react';
+import { Mail, MapPin, Phone } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 const Footer = () => {
@@ -107,14 +107,38 @@ const Footer = () => {
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 <span className="text-background/70">
+                  <strong className="block text-background/90 font-semibold mb-1">Branch 1 - Ahilyanagar</strong>
                   1st floor, Shivshambho Towers, Tapovan Road, Behind Saibaba Mandir, Nirmalnagar, Ahilyanagar
                   <br />
                   414003, Maharashtra, India
                 </span>
               </li>
+              <li className="flex items-start gap-3">
+                <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                <span className="text-background/70">
+                  <strong className="block text-background/90 font-semibold mb-1">Branch 2 - Karad</strong>
+                  2nd Floor, Raje Heights Building, Opp. SGM College, Behind Mardani Hotel, Vidyanagar, Saidapur, Karad
+                  <br />
+                  Maharashtra, India
+                </span>
+              </li>
+              <li className="flex items-center gap-3">
+                <Phone className="w-5 h-5 text-primary flex-shrink-0" />
+                <a
+                  href="tel:+919960594024"
+                  className="text-background/70 hover:text-primary transition-colors duration-300"
+                >
+                  +91 99605 94024
+                </a>
+              </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary flex-shrink-0" />
-                <span className="text-background/70">hello@brightminds.in</span>
+                <a
+                  href="mailto:hello@brightminds.in"
+                  className="text-background/70 hover:text-primary transition-colors duration-300"
+                >
+                  hello@brightminds.in
+                </a>
               </li>
             </ul>
           </div>

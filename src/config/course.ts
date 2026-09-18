@@ -35,7 +35,7 @@ export const COURSES: Course[] = [
   {
     id: 'nda-1-april-2027',
     slug: 'nda-1-april-2027',
-    title: 'NDA-1 April 2027',
+    title: 'NDA (I) April 2027',
     heading: 'Your Journey to the Academy Starts Here.',
     tagline: 'New Batch',
     subtitle: 'Complete written exam preparation for the UPSC NDA & NA Examination',
@@ -43,11 +43,11 @@ export const COURSES: Course[] = [
       'Six months of structured, mentor-led online coaching covering the complete UPSC NDA written syllabus. Mathematics and the General Ability Test are taught from the ground up against the official syllabus, with regular full-length mocks and detailed analysis of every paper.',
     price: 499,
     originalPrice: 1500,
-    duration: '6 months of online coaching',
-    mode: 'Live online classes',
+    duration: '6 months',
+    mode: 'Live Online Classes',
     eligibility: 'Class 11, 12 & 12th-pass aspirants',
     seats: 'Limited seats per batch',
-    startsOn: 'Batch starts 27 April 2026',
+    startsOn: '27 Sept 2026',
     highlights: [
       {
         title: 'Paper I - Mathematics',
