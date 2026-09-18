@@ -106,13 +106,6 @@ const ContactSection = () => {
       subtext: 'Quick response guaranteed',
     },
     {
-      icon: Phone,
-      label: 'Call Us',
-      value: '+91 99605 94024',
-      href: 'tel:+919960594024',
-      subtext: 'Monday to Saturday, 9:00 AM - 7:00 PM',
-    },
-    {
       icon: MapPin,
       label: 'Branch 1 - Ahilyanagar',
       value: (
@@ -122,6 +115,8 @@ const ContactSection = () => {
           414003
         </>
       ),
+      phone: '+91 70588 71593',
+      phoneHref: 'tel:+917058871593',
       subtext: 'Maharashtra, India',
     },
     {
@@ -132,6 +127,8 @@ const ContactSection = () => {
           2nd Floor, Raje Heights Building, Opp. SGM College, Behind Mardani Hotel, Vidyanagar, Saidapur, Karad
         </>
       ),
+      phone: '+91 99605 94024',
+      phoneHref: 'tel:+919960594024',
       subtext: 'Maharashtra, India',
     },
     {
@@ -201,6 +198,15 @@ const ContactSection = () => {
                       </a>
                     ) : (
                       <p className="font-display font-semibold text-foreground">{item.value}</p>
+                    )}
+                    {item.phone && (
+                      <a
+                        href={item.phoneHref}
+                        className="inline-flex items-center gap-1.5 mt-1.5 text-sm font-semibold text-foreground hover:text-primary transition-colors duration-300"
+                      >
+                        <Phone className="w-3.5 h-3.5 text-primary" />
+                        {item.phone}
+                      </a>
                     )}
                     <p className="text-xs text-muted-foreground mt-0.5">{item.subtext}</p>
                   </div>

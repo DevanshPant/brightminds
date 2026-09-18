@@ -28,6 +28,33 @@ const Footer = () => {
     { name: 'My Dashboard', href: '/dashboard' },
   ];
 
+  const branches = [
+    {
+      name: 'Branch 1 - Ahilyanagar',
+      address: (
+        <>
+          1st floor, Shivshambho Towers, Tapovan Road, Behind Saibaba Mandir, Nirmalnagar, Ahilyanagar
+          <br />
+          414003, Maharashtra, India
+        </>
+      ),
+      phone: '+91 70588 71593',
+      phoneHref: 'tel:+917058871593',
+    },
+    {
+      name: 'Branch 2 - Karad',
+      address: (
+        <>
+          2nd Floor, Raje Heights Building, Opp. SGM College, Behind Mardani Hotel, Vidyanagar, Saidapur, Karad
+          <br />
+          Maharashtra, India
+        </>
+      ),
+      phone: '+91 99605 94024',
+      phoneHref: 'tel:+919960594024',
+    },
+  ];
+
   const legalLinks = [
     { name: 'Privacy Policy', href: '/privacy-policy' },
     { name: 'Terms of Use', href: '/terms-of-use' },
@@ -104,33 +131,22 @@ const Footer = () => {
           <div>
             <h4 className="font-display font-semibold text-lg text-background mb-6">Contact Us</h4>
             <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-background/70">
-                  <strong className="block text-background/90 font-semibold mb-1">Branch 1 - Ahilyanagar</strong>
-                  1st floor, Shivshambho Towers, Tapovan Road, Behind Saibaba Mandir, Nirmalnagar, Ahilyanagar
-                  <br />
-                  414003, Maharashtra, India
-                </span>
-              </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-background/70">
-                  <strong className="block text-background/90 font-semibold mb-1">Branch 2 - Karad</strong>
-                  2nd Floor, Raje Heights Building, Opp. SGM College, Behind Mardani Hotel, Vidyanagar, Saidapur, Karad
-                  <br />
-                  Maharashtra, India
-                </span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone className="w-5 h-5 text-primary flex-shrink-0" />
-                <a
-                  href="tel:+919960594024"
-                  className="text-background/70 hover:text-primary transition-colors duration-300"
-                >
-                  +91 99605 94024
-                </a>
-              </li>
+              {branches.map((branch) => (
+                <li key={branch.name} className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+                  <span className="text-background/70">
+                    <strong className="block text-background/90 font-semibold mb-1">{branch.name}</strong>
+                    {branch.address}
+                    <a
+                      href={branch.phoneHref}
+                      className="inline-flex items-center gap-1.5 mt-1.5 text-background/90 hover:text-primary transition-colors duration-300"
+                    >
+                      <Phone className="w-4 h-4 text-primary flex-shrink-0" />
+                      {branch.phone}
+                    </a>
+                  </span>
+                </li>
+              ))}
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary flex-shrink-0" />
                 <a
