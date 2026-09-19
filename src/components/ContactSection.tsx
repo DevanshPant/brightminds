@@ -50,7 +50,9 @@ const ContactSection = () => {
     // Add form fields (send both entry.* fields and readable keys for Apps Script)
     const fields = [
       { name: 'entry.330719284', value: formData.studentName },
-      { name: 'entry.313112089', value: formData.studentClass ? `Class ${formData.studentClass}` : '' },
+      // The option values are full labels now ("Class 9", "Graduation"), so they
+      // are sent as-is. Prefixing would produce "Class Graduation".
+      { name: 'entry.313112089', value: formData.studentClass },
       { name: 'entry.1750223016', value: formData.parentContact },
       { name: 'entry.743997789', value: formData.email },
       { name: 'entry.266804100', value: formData.message },
@@ -250,10 +252,14 @@ const ContactSection = () => {
                     className="w-full h-12 rounded-xl border border-primary/20 bg-background px-4 text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">Select class</option>
-                    <option value="7">Class 7</option>
-                    <option value="8">Class 8</option>
-                    <option value="9">Class 9</option>
-                    <option value="10">Class 10</option>
+                    <option value="Class 7">Class 7</option>
+                    <option value="Class 8">Class 8</option>
+                    <option value="Class 9">Class 9</option>
+                    <option value="Class 10">Class 10</option>
+                    <option value="Class 11">Class 11</option>
+                    <option value="Class 12">Class 12</option>
+                    <option value="Graduation">Graduation</option>
+                    <option value="Post Graduation">Post Graduation</option>
                   </select>
                 </div>
               </div>

@@ -49,9 +49,6 @@ const WhyUsSection = () => {
                   <Star key={i} className="w-5 h-5 fill-primary text-primary" />
                 ))}
               </div>
-                <span className="text-background/70 text-sm ml-2">
-                Trusted by parents across Ahilyanagar
-              </span>
             </div>
           </div>
 

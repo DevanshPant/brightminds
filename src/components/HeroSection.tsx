@@ -57,7 +57,7 @@ const HeroSection = () => {
           style={{ animationDelay: '2s', animationFillMode: 'forwards' }}
         >
           <p className="text-lg sm:text-xl text-muted-foreground leading-relaxed mb-3">
-            At BrightMinds, we believe the foundation for a successful career starts in middle school.
+            At BrightMinds, we believe the right guidance at every stage of education can shape a successful career.
           </p>
           <p className="text-base sm:text-lg text-muted-foreground/80 leading-relaxed">
             Comprehensive Coaching, Career Guidance, and Mentorship, all under one roof.

@@ -123,7 +123,7 @@ const CoursesSection = () => {
                   )}
                 </div>
                 <p className="text-sm text-muted-foreground mb-5">
-                  One-time payment · Instant receipt by email · Lifetime community access
+                  One-time payment · Instant receipt by email
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3">
