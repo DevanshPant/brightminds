@@ -26,7 +26,8 @@
     "reset:data": "node scripts/reset-test-data.mjs",
     "resend:receipts": "node scripts/resend-receipts.mjs",
     "backfill:whatsapp": "node scripts/backfill-whatsapp.mjs",
-    "test:enrolment": "node scripts/test-enrolment-flow.mjs"
+    "test:enrolment": "node scripts/test-enrolment-flow.mjs",
+    "test:golive": "node scripts/test-go-live.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
