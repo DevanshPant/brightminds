@@ -110,7 +110,7 @@ try {
   check('recordings link NOT returned', !expired.body?.recordingsUrl,
         'AN EXPIRED STUDENT COULD STILL WATCH');
   check('whole response is free of the link',
-        !JSON.stringify(expired.body).includes('18UobfxSspHzxfQC8lDdrAr'));
+        !JSON.stringify(expired.body).includes(RECORDINGS));
 
   // ---- signed in, never bought ---------------------------------------------
   console.log('\nSigned in, never bought');
@@ -120,14 +120,14 @@ try {
   check('recordings link NOT returned', !nobuy.body?.recordingsUrl,
         'A NON-PAYING USER COULD WATCH');
   check('whole response is free of the link',
-        !JSON.stringify(nobuy.body).includes('18UobfxSspHzxfQC8lDdrAr'));
+        !JSON.stringify(nobuy.body).includes(RECORDINGS));
 
   // ---- not signed in at all ------------------------------------------------
   console.log('\nNot signed in');
   const anon = mockRes();
   await handler({ method: 'POST', headers: {}, body: {} }, anon);
   check('rejected with 401', anon.statusCode === 401);
-  check('no link in the response', !JSON.stringify(anon.body).includes('18UobfxSspHzxfQC8lDdrAr'));
+  check('no link in the response', !JSON.stringify(anon.body).includes(RECORDINGS));
 
   const wrongMethod = mockRes();
   await handler({ method: 'GET', headers: {}, body: {} }, wrongMethod);
