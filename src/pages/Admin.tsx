@@ -236,7 +236,13 @@ const Admin = () => {
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap">{row.phone || '-'}</td>
                             <td className="px-4 py-3">{row.courseTitle}</td>
-                            <td className="px-4 py-3 font-semibold whitespace-nowrap">{formatINR(row.amount)}</td>
+                            <td className="px-4 py-3 font-semibold whitespace-nowrap">
+                              {row.isComplimentary ? (
+                                <span className="text-xs font-bold text-muted-foreground">COMP</span>
+                              ) : (
+                                formatINR(row.amount)
+                              )}
+                            </td>
                             <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(row.paidAt)}</td>
                           </tr>
                         ))}

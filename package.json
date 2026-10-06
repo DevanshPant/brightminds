@@ -27,7 +27,10 @@
     "resend:receipts": "node scripts/resend-receipts.mjs",
     "backfill:whatsapp": "node scripts/backfill-whatsapp.mjs",
     "test:enrolment": "node scripts/test-enrolment-flow.mjs",
-    "test:golive": "node scripts/test-go-live.mjs"
+    "test:golive": "node scripts/test-go-live.mjs",
+    "grant:course": "node scripts/grant-course.mjs",
+    "test:videos": "node scripts/test-course-videos.mjs",
+    "set:video-access": "node scripts/set-video-access.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

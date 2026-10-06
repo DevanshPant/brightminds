@@ -89,7 +89,7 @@ export async function buildEnrolmentWorkbook() {
       name: s.fullName || s.displayName || e?.studentName || '',
       email: s.email || e?.email || '',
       phone: s.phone || e?.phone || '',
-      status: e ? 'Enrolled' : 'Signed up',
+      status: e ? (e.isComplimentary ? 'Complimentary' : 'Enrolled') : 'Signed up',
       course: e?.courseTitle || '',
       amount: e ? Number(e.amount) || 0 : '',
       receipt: e?.receiptNo || '',
@@ -113,13 +113,15 @@ export async function buildEnrolmentWorkbook() {
   // Green fill on every enrolled row so paying students stand out.
   sheet.eachRow((row, i) => {
     if (i === 1) return;
-    if (row.getCell('status').value === 'Enrolled') {
+    const st = row.getCell('status').value;
+    if (st === 'Enrolled' || st === 'Complimentary') {
       row.getCell('status').font = { bold: true, color: { argb: 'FF22803C' } };
     }
   });
 
   // Totals, two rows under the data.
   const paidCount = byUid.size;
+  // Complimentary enrolments are zero-amount, so they do not move revenue.
   const revenue = [...byUid.values()].reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
   sheet.addRow({});
   const totals = sheet.addRow({

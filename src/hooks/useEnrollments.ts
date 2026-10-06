@@ -20,6 +20,8 @@ export type Enrollment = {
   paidAt: string;
   whatsappLink: string | null;
   receiptEmailSent?: boolean;
+  isComplimentary?: boolean;
+  videoAccessExpiresAt?: string;
 };
 
 /**

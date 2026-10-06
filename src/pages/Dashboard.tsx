@@ -16,6 +16,7 @@ import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth-context';
 import { useEnrollments } from '@/hooks/useEnrollments';
+import CourseVideosSection from '@/components/CourseVideosSection';
 import { COURSES, formatINR } from '@/config/course';
 
 const formatDate = (value?: string) => {
@@ -77,6 +78,8 @@ const Dashboard = () => {
               Sign out
             </Button>
           </div>
+
+          <CourseVideosSection />
 
           {/* Enrolments */}
           <section className="mb-14">
