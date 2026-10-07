@@ -349,6 +349,53 @@ await test('refuses nonsense rather than asking Drive for it', () => {
   assert.equal(driveIdFrom('not an id'), null);
 });
 
+console.log('\nPer-lesson access window');
+
+const { windowFor } = await import('../api/course-videos.js');
+const DAY = 86400000;
+const NOW = Date.UTC(2026, 9, 7);
+const iso = (ms) => new Date(ms).toISOString();
+
+await test('a lesson uploaded after the student paid runs from the upload', () => {
+  const paid = NOW - 30 * DAY;
+  const uploaded = NOW - 2 * DAY;
+  const { opensAt, expiresAt } = windowFor(iso(uploaded), paid, 0, 7);
+  assert.equal(opensAt, uploaded);
+  assert.equal(expiresAt, uploaded + 7 * DAY);
+});
+
+await test('a lesson already there when they paid runs from their payment', () => {
+  const paid = NOW - 2 * DAY;
+  const uploaded = NOW - 30 * DAY;
+  const { opensAt, expiresAt } = windowFor(iso(uploaded), paid, 0, 7);
+  assert.equal(opensAt, paid, 'a new student must not inherit a window that already ran out');
+  assert.equal(expiresAt, paid + 7 * DAY);
+});
+
+await test('two lessons uploaded days apart close days apart', () => {
+  const paid = NOW - 365 * DAY;
+  const a = windowFor(iso(NOW - 5 * DAY), paid, 0, 7).expiresAt;
+  const b = windowFor(iso(NOW - 2 * DAY), paid, 0, 7).expiresAt;
+  assert.equal(b - a, 3 * DAY);
+});
+
+await test('a manual extension is a floor, never a ceiling', () => {
+  const paid = NOW - 365 * DAY;
+  const override = NOW + 30 * DAY;
+  // An old lesson is pulled forward to the override.
+  assert.equal(windowFor(iso(NOW - 100 * DAY), paid, override, 7).expiresAt, override);
+  // A lesson whose own window runs past the override keeps its own.
+  const fresh = windowFor(iso(NOW + 29 * DAY), paid, override, 7);
+  assert.equal(fresh.expiresAt, NOW + 36 * DAY,
+    'extending one student must never shorten a newer lesson');
+});
+
+await test('a lesson with no upload date falls back to the payment date', () => {
+  const paid = NOW - 3 * DAY;
+  assert.equal(windowFor(null, paid, 0, 7).opensAt, paid);
+  assert.equal(windowFor('not a date', paid, 0, 7).opensAt, paid);
+});
+
 console.error = originalError;
 
 console.log(`\n${failed === 0 ? '✓' : '✗'} ${passed} passed, ${failed} failed\n`);

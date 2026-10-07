@@ -16,6 +16,18 @@ const formatDate = (value?: string) => {
     : d.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
 };
 
+const formatDuration = (ms: number | null) => {
+  if (!ms) return null;
+  const mins = Math.round(ms / 60000);
+  return mins < 60 ? `${mins} min` : `${Math.floor(mins / 60)}h ${mins % 60}m`;
+};
+
+/** "3 days left", or hours once it is down to the last day. */
+const formatLeft = (video: CourseVideo) =>
+  video.daysRemaining === 0
+    ? `${video.hoursRemaining}h left`
+    : `${video.daysRemaining} day${video.daysRemaining === 1 ? '' : 's'} left`;
+
 /**
  * Recorded classes for enrolled students, and a demo for everyone else.
  *
@@ -23,13 +35,12 @@ const formatDate = (value?: string) => {
  * so anything uploaded to Drive appears here immediately - nothing needs
  * redeploying - while students never receive a Drive link they could open or
  * download from. Every lesson plays in VideoPlayerDialog on this page.
+ *
+ * Each lesson runs its own week, started by whichever came later: the lesson
+ * going up, or the student paying. So the countdown is per lesson, not one
+ * countdown for the whole course, and a lesson uploaded today reads "7 days
+ * left" next to one uploaded last week reading "1 day left".
  */
-const formatDuration = (ms: number | null) => {
-  if (!ms) return null;
-  const mins = Math.round(ms / 60000);
-  return mins < 60 ? `${mins} min` : `${Math.floor(mins / 60)}h ${mins % 60}m`;
-};
-
 const CourseVideosSection = () => {
   const { videos, loading, error } = useCourseVideos();
   const [playing, setPlaying] = useState<{ video: CourseVideo; subject: string } | null>(null);
@@ -65,9 +76,10 @@ const CourseVideosSection = () => {
 
   if (!videos) return null;
 
-  const { hasAccess, reason, demoVideoId, daysRemaining, hoursRemaining, expiresAt, accessDays, libraryError } = videos;
+  const { hasAccess, reason, demoVideoId, accessDays, libraryError, watermark } = videos;
   const subjects = videos.subjects || [];
-  const endingSoon = hasAccess && (daysRemaining ?? 99) <= 2;
+  const openVideos = videos.openVideos ?? 0;
+  const expiredVideos = videos.expiredVideos ?? 0;
 
   return (
     <section className="mb-14">
@@ -78,10 +90,10 @@ const CourseVideosSection = () => {
       <VideoPlayerDialog
         video={playing?.video ?? null}
         subjectName={playing?.subject}
+        watermark={watermark}
         onClose={() => setPlaying(null)}
       />
 
-      {/* Enrolled, inside the window */}
       {hasAccess && (
         <div className="rounded-3xl border border-primary/15 bg-card p-6 sm:p-8 shadow-golden">
           <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
@@ -94,20 +106,18 @@ const CourseVideosSection = () => {
                   Recorded classes
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  New classes appear here as they are uploaded.
+                  Each lesson stays open for {accessDays} days from the day it is uploaded.
                 </p>
               </div>
             </div>
 
             <span
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ${
-                endingSoon ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-700'
+                openVideos === 0 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-700'
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
-              {daysRemaining === 0
-                ? `${hoursRemaining}h left`
-                : `${daysRemaining} day${daysRemaining === 1 ? '' : 's'} left`}
+              {openVideos} open{expiredVideos > 0 ? `, ${expiredVideos} closed` : ''}
             </span>
           </div>
 
@@ -124,6 +134,7 @@ const CourseVideosSection = () => {
             <div className="space-y-3">
               {subjects.map((subject) => {
                 const open = openSubject === subject.id;
+                const live = subject.videos.filter((v) => !v.expired).length;
                 return (
                   <div key={subject.id} className="rounded-2xl border border-primary/10 overflow-hidden">
                     <button
@@ -138,7 +149,7 @@ const CourseVideosSection = () => {
                           {subject.name}
                         </span>
                         <span className="text-xs text-muted-foreground shrink-0">
-                          {subject.videos.length} lesson{subject.videos.length === 1 ? '' : 's'}
+                          {live} of {subject.videos.length} open
                         </span>
                       </span>
                       <ChevronDown
@@ -148,39 +159,79 @@ const CourseVideosSection = () => {
 
                     {open && (
                       <ul className="divide-y divide-primary/10">
-                        {subject.videos.map((video) => (
-                          <li key={video.id}>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setPlaying({
-                                  video,
-                                  subject: video.chapter ? `${subject.name} / ${video.chapter}` : subject.name,
-                                })
-                              }
-                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/40 transition-colors text-left group"
-                            >
-                              <span className="w-9 h-9 rounded-full bg-gradient-accent flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                                <Play className="w-4 h-4 text-foreground" />
-                              </span>
-                              <span className="min-w-0 flex-1">
-                                {video.chapter && (
-                                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary/80 truncate">
-                                    {video.chapter}
-                                  </span>
-                                )}
-                                <span className="block text-sm font-medium text-foreground truncate">
-                                  {video.name}
+                        {subject.videos.map((video) => {
+                          const key = video.id || `${subject.id}-${video.chapter || ''}-${video.name}`;
+
+                          // Closed: named, but there is nothing to click, because
+                          // the server did not send an id to play.
+                          if (video.expired) {
+                            return (
+                              <li
+                                key={key}
+                                className="flex items-center gap-3 px-4 py-3 bg-secondary/20"
+                              >
+                                <span className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                                  <Lock className="w-4 h-4 text-muted-foreground" />
                                 </span>
-                                {formatDuration(video.durationMs) && (
-                                  <span className="block text-xs text-muted-foreground">
-                                    {formatDuration(video.durationMs)}
+                                <span className="min-w-0 flex-1">
+                                  {video.chapter && (
+                                    <span className="block text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70 truncate">
+                                      {video.chapter}
+                                    </span>
+                                  )}
+                                  <span className="block text-sm font-medium text-muted-foreground truncate line-through">
+                                    {video.name}
                                   </span>
-                                )}
-                              </span>
-                            </button>
-                          </li>
-                        ))}
+                                  <span className="block text-xs text-muted-foreground/80">
+                                    Closed on {formatDate(video.expiresAt)}
+                                  </span>
+                                </span>
+                              </li>
+                            );
+                          }
+
+                          const endingSoon = video.daysRemaining <= 2;
+                          return (
+                            <li key={key}>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setPlaying({
+                                    video,
+                                    subject: video.chapter ? `${subject.name} / ${video.chapter}` : subject.name,
+                                  })
+                                }
+                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/40 transition-colors text-left group"
+                              >
+                                <span className="w-9 h-9 rounded-full bg-gradient-accent flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                  <Play className="w-4 h-4 text-foreground" />
+                                </span>
+                                <span className="min-w-0 flex-1">
+                                  {video.chapter && (
+                                    <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary/80 truncate">
+                                      {video.chapter}
+                                    </span>
+                                  )}
+                                  <span className="block text-sm font-medium text-foreground truncate">
+                                    {video.name}
+                                  </span>
+                                  {formatDuration(video.durationMs) && (
+                                    <span className="block text-xs text-muted-foreground">
+                                      {formatDuration(video.durationMs)}
+                                    </span>
+                                  )}
+                                </span>
+                                <span
+                                  className={`shrink-0 text-[11px] font-bold px-2 py-1 rounded-full whitespace-nowrap ${
+                                    endingSoon ? 'bg-amber-100 text-amber-800' : 'bg-secondary text-muted-foreground'
+                                  }`}
+                                >
+                                  {formatLeft(video)}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                   </div>
@@ -190,34 +241,8 @@ const CourseVideosSection = () => {
           )}
 
           <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
-            Your access runs until <strong className="text-foreground">{formatDate(expiresAt)}</strong>.
-            Lessons play here and are for your personal study only.
-          </p>
-        </div>
-      )}
-
-      {/* Enrolled, window closed */}
-      {!hasAccess && reason === 'expired' && (
-        <div className="rounded-3xl border border-amber-200 bg-amber-50 p-6 sm:p-8">
-          <div className="flex items-start gap-3 mb-4">
-            <Lock className="w-6 h-6 text-amber-600 shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-display text-lg font-bold text-foreground mb-1">
-                Your video access has ended
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Recordings were available for {accessDays} days after your enrolment, until{' '}
-                <strong className="text-foreground">{formatDate(expiresAt)}</strong>. Your enrolment
-                and receipt are unaffected.
-              </p>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Need more time? Message us in the community or write to{' '}
-            <a href="mailto:hello@brightmindsclasses.in" className="underline hover:text-foreground">
-              hello@brightmindsclasses.in
-            </a>
-            .
+            Every new lesson opens for {accessDays} days of its own, so keep checking back.
+            Lessons play here, carry your name, and are for your personal study only.
           </p>
         </div>
       )}
@@ -247,7 +272,16 @@ const CourseVideosSection = () => {
                 className="w-full sm:w-auto"
                 onClick={() =>
                   setPlaying({
-                    video: { id: demoVideoId, name: 'Demo class', durationMs: null, addedAt: null },
+                    video: {
+                      id: demoVideoId,
+                      name: 'Demo class',
+                      durationMs: null,
+                      expired: false,
+                      openedAt: '',
+                      expiresAt: '',
+                      daysRemaining: 0,
+                      hoursRemaining: 0,
+                    },
                     subject: 'Free preview',
                   })
                 }
@@ -270,7 +304,7 @@ const CourseVideosSection = () => {
           </div>
 
           <p className="text-xs text-muted-foreground mt-4">
-            Recorded classes unlock for {accessDays} days once you enrol.
+            Once you enrol, every lesson opens for {accessDays} days from the day it goes up.
           </p>
         </div>
       )}

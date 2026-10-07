@@ -3,13 +3,17 @@ import { apiPost } from '@/lib/api';
 import { useAuth } from '@/contexts/auth-context';
 
 export type CourseVideo = {
-  id: string;
+  /** Absent once this lesson's window has closed - the server withholds it. */
+  id?: string;
   name: string;
   /** Set when a subject is split into chapter folders in Drive. */
   chapter?: string | null;
   durationMs: number | null;
-  addedAt: string | null;
-  downloadable?: boolean;
+  expired: boolean;
+  openedAt: string;
+  expiresAt: string;
+  daysRemaining: number;
+  hoursRemaining: number;
 };
 
 export type CourseSubject = {
@@ -20,26 +24,27 @@ export type CourseSubject = {
 
 export type CourseVideos = {
   hasAccess: boolean;
-  reason?: 'not-enrolled' | 'expired';
+  reason?: 'not-enrolled';
   demoVideoId: string | null;
   subjects?: CourseSubject[];
   totalVideos?: number;
+  openVideos?: number;
+  expiredVideos?: number;
   libraryError?: string | null;
+  watermark?: string | null;
   courseTitle?: string | null;
   receiptNo?: string | null;
   paidAt?: string;
-  expiresAt?: string;
-  daysRemaining?: number;
-  hoursRemaining?: number;
   accessDays: number;
 };
 
 /**
  * Course video access for the signed-in student.
  *
- * The server returns the subject and video list only while the access window
- * is open. No shareable Drive link is ever sent to the browser, so a lesson
- * cannot be passed on by copying a URL out of the page.
+ * Each lesson runs its own week, so the server returns a per-lesson expiry and
+ * withholds the Drive id of anything that has run out. No shareable Drive link
+ * is ever sent to the browser, so a lesson cannot be passed on by copying a URL
+ * out of the page.
  */
 export const useCourseVideos = () => {
   const { user, getToken } = useAuth();

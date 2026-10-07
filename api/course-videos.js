@@ -11,19 +11,44 @@ const env = (name) => {
     : raw;
 };
 
-/** Days of recording access from the moment of payment. */
+const DAY = 24 * 60 * 60 * 1000;
+
+/** Days each lesson stays open to a student. */
 const ACCESS_DAYS = Number(env('COURSE_VIDEO_ACCESS_DAYS') || 7);
+
+/**
+ * When a lesson opens for this student, and when it closes.
+ *
+ * Every lesson runs its own clock, started by whichever came later: the lesson
+ * being uploaded, or the student paying. So a lesson uploaded today gives every
+ * current student a fresh week on it, and a student who enrols today gets a
+ * full week on the lessons already there. Nobody is handed a window that ran
+ * out before they could use it, and the course keeps rolling forward as more
+ * lessons go up.
+ *
+ * An explicit videoAccessExpiresAt on the enrolment is a floor, not a ceiling,
+ * so extending somebody by hand can never shorten a newer lesson.
+ */
+export const windowFor = (addedAt, paidAtMs, overrideMs, accessDays = ACCESS_DAYS) => {
+  const uploadedMs = addedAt ? new Date(addedAt).getTime() : NaN;
+  const opensAt = Math.max(Number.isNaN(uploadedMs) ? 0 : uploadedMs, paidAtMs);
+  const expiresAt = Math.max(opensAt + accessDays * DAY, overrideMs || 0);
+  return { opensAt, expiresAt };
+};
 
 /**
  * POST /api/course-videos
  * Auth: Firebase ID token.
  *
- * Returns the recordings link ONLY to a student with a paid enrolment that is
- * still inside its access window. The window is enforced here rather than in
- * Firestore rules, because a link stored on the enrolment document would stay
- * readable by its owner forever - expiry would be cosmetic.
+ * Returns the lessons a paid student may watch right now. A lesson whose window
+ * has closed comes back named, but WITHOUT its Drive id: the id is the only
+ * thing needed to play a video, so sending it alongside an "expired" flag would
+ * make the expiry a suggestion rather than a limit.
  *
- * The demo video is returned to any signed-in user, so a student can see what
+ * The window is enforced here rather than in Firestore rules, because anything
+ * stored on the enrolment document stays readable by its owner forever.
+ *
+ * The demo video is returned to any signed-in user, so somebody can see what
  * the course is like before buying.
  */
 export default async function handler(req, res) {
@@ -61,33 +86,17 @@ export default async function handler(req, res) {
 
     const now = Date.now();
 
-    // Use the most recent enrolment, so re-buying restarts the window.
+    // Use the most recent enrolment, so re-buying restarts the clocks.
     const enrolments = snap.docs
       .map((d) => d.data())
       .sort((a, b) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime());
 
     const current = enrolments[0];
-    const paidAt = new Date(current.paidAt).getTime();
-
-    // An explicit expiry on the record wins, so access can be extended by hand.
-    const expiresAt = current.videoAccessExpiresAt
-      ? new Date(current.videoAccessExpiresAt).getTime()
-      : paidAt + ACCESS_DAYS * 24 * 60 * 60 * 1000;
-
+    const paidAtMs = new Date(current.paidAt).getTime();
+    const overrideMs = current.videoAccessExpiresAt ? new Date(current.videoAccessExpiresAt).getTime() : 0;
     const course = getCourse(current.courseId);
 
-    if (now > expiresAt) {
-      return res.status(200).json({
-        hasAccess: false,
-        reason: 'expired',
-        demoVideoId,
-        courseTitle: current.courseTitle || course?.title || null,
-        expiresAt: new Date(expiresAt).toISOString(),
-        accessDays: ACCESS_DAYS,
-      });
-    }
-
-    // Subjects and video ids, never a shareable folder link. Each video is
+    // Subjects and video ids, never a shareable folder link. Each lesson is
     // played in an embedded player on our own page.
     let library = { subjects: [], totalVideos: 0 };
     let libraryError = null;
@@ -98,20 +107,51 @@ export default async function handler(req, res) {
       libraryError = 'Videos are being set up. Please check back shortly.';
     }
 
-    const msLeft = expiresAt - now;
+    let openVideos = 0;
+    let expiredVideos = 0;
+
+    const subjects = library.subjects.map((subject) => ({
+      id: subject.id,
+      name: subject.name,
+      videos: subject.videos.map((video) => {
+        const { opensAt, expiresAt } = windowFor(video.addedAt, paidAtMs, overrideMs);
+        const msLeft = expiresAt - now;
+        const expired = msLeft <= 0;
+        if (expired) expiredVideos += 1;
+        else openVideos += 1;
+
+        return {
+          // Deliberately absent once this lesson's window has closed.
+          ...(expired ? {} : { id: video.id }),
+          name: video.name,
+          chapter: video.chapter,
+          durationMs: video.durationMs,
+          expired,
+          openedAt: new Date(opensAt).toISOString(),
+          expiresAt: new Date(expiresAt).toISOString(),
+          // Round up: with 10 hours left a student has "1 day", not "0 days".
+          daysRemaining: expired ? 0 : Math.max(0, Math.ceil(msLeft / DAY)),
+          hoursRemaining: expired ? 0 : Math.max(0, Math.floor(msLeft / (60 * 60 * 1000))),
+        };
+      }),
+    }));
+
     return res.status(200).json({
       hasAccess: true,
       demoVideoId,
-      subjects: library.subjects,
+      subjects,
       totalVideos: library.totalVideos,
+      openVideos,
+      expiredVideos,
       libraryError,
+      // Burnt across the picture while a lesson plays, so any recording of it
+      // carries the name of the account it was taken from.
+      watermark:
+        [current.studentName || user.name, current.email || user.email].filter(Boolean).join('  ')
+        || null,
       courseTitle: current.courseTitle || course?.title || null,
       receiptNo: current.receiptNo || null,
       paidAt: current.paidAt,
-      expiresAt: new Date(expiresAt).toISOString(),
-      // Round up: with 10 hours left a student has "1 day", not "0 days".
-      daysRemaining: Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000))),
-      hoursRemaining: Math.max(0, Math.floor(msLeft / (60 * 60 * 1000))),
       accessDays: ACCESS_DAYS,
     });
   } catch (error) {
