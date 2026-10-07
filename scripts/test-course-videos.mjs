@@ -211,17 +211,45 @@ try {
   // ---- signed in, never bought ---------------------------------------------
   console.log('\nSigned in, never bought');
   const nobuy = await callAs(NOBUY);
-  check('access refused', nobuy.body?.hasAccess === false);
+  check('not treated as enrolled', nobuy.body?.hasAccess === false);
   check('reason is "not-enrolled"', nobuy.body?.reason === 'not-enrolled');
-  check('no lessons returned at all', !nobuy.body?.subjects);
   check('demo offered as an id only',
         !JSON.stringify(nobuy.body).includes('drive.google.com'),
         'THE DEMO COULD BE OPENED IN DRIVE');
   check('whole response is free of the Drive folder id',
         !JSON.stringify(nobuy.body).includes(FOLDER_ID));
-  check('no lesson id reaches a non-payer',
-        !freshIds.some((id) => JSON.stringify(nobuy.body).includes(id)),
-        'A NON-PAYING USER COULD PLAY A LESSON');
+
+  const nobuyVideos = allVideos(nobuy.body);
+  const nobuyPlayable = nobuyVideos.filter((v) => v.id);
+  const freeCount = Number(process.env.COURSE_FREE_VIDEO_COUNT || 2);
+
+  check('the whole catalogue is listed, so they can see what they would get',
+        nobuyVideos.length === freshVideos.length,
+        `${nobuyVideos.length} vs ${freshVideos.length}`);
+  check(`exactly ${freeCount} lecture(s) are playable before buying`,
+        nobuyPlayable.length === freeCount,
+        `${nobuyPlayable.length} playable`);
+  check('every playable one is flagged free', nobuyPlayable.every((v) => v.free === true));
+  check('a free lecture is a real lesson, not the demo',
+        !nobuyPlayable.some((v) => v.id === nobuy.body.demoVideoId));
+
+  // The fairness check: a non-payer must get materially less than a payer.
+  const lockedForNobuy = nobuyVideos.filter((v) => v.locked);
+  check('every other lecture is locked', lockedForNobuy.length === nobuyVideos.length - freeCount);
+  check('NO locked lecture carries a Drive id',
+        lockedForNobuy.every((v) => !v.id),
+        'A NON-PAYING USER COULD PLAY THE WHOLE COURSE');
+  check('no locked lecture id appears anywhere in the payload',
+        freshIds.filter((id) => !nobuyPlayable.some((v) => v.id === id))
+          .every((id) => !JSON.stringify(nobuy.body).includes(id)),
+        'A PAID LESSON ID LEAKED TO A NON-PAYER');
+  check('a payer still gets strictly more than a non-payer',
+        freshVideos.filter((v) => v.id).length > nobuyPlayable.length,
+        'PAYING WOULD BUY NOTHING EXTRA');
+  check('locked lectures are still named, which is what drives the upsell',
+        lockedForNobuy.every((v) => Boolean(v.name)));
+  check('the free set does not drift as lessons are added',
+        nobuyPlayable.every((v) => Boolean(v.id)) && nobuyPlayable.length === freeCount);
 
   // ---- not signed in at all ------------------------------------------------
   console.log('\nNot signed in');

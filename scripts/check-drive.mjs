@@ -48,16 +48,33 @@ try {
 
   console.log(`  ${G}Readable.${X} ${subjects.length} subject${subjects.length === 1 ? '' : 's'}, ${totalVideos} video${totalVideos === 1 ? '' : 's'}.\n`);
 
+  // The same choice the server makes for a signed-in visitor who has not paid.
+  const freeIds = (process.env.COURSE_FREE_VIDEO_IDS || '')
+    .split(/[,\s]+/).map((v) => v.trim()).filter(Boolean);
+  const freeCount = Number(process.env.COURSE_FREE_VIDEO_COUNT || 2);
+  const free = new Set(
+    freeIds.length
+      ? freeIds
+      : subjects
+        .flatMap((s) => s.videos)
+        .sort((a, b) => new Date(a.addedAt || 0).getTime() - new Date(b.addedAt || 0).getTime())
+        .slice(0, freeCount)
+        .map((v) => v.id),
+  );
+
   for (const subject of subjects) {
     console.log(`  ${subject.name}  ${D}(${subject.videos.length})${X}`);
     for (const video of subject.videos) {
       const mins = video.durationMs ? `${Math.round(video.durationMs / 60000)} min` : 'duration unknown';
       const chapter = video.chapter ? `${D}[${video.chapter}]${X} ` : '';
-      console.log(`    ${D}-${X} ${chapter}${video.name}  ${D}${mins}${X}`);
+      const tag = free.has(video.id) ? `  ${G}FREE${X}` : '';
+      console.log(`    ${D}-${X} ${chapter}${video.name}  ${D}${mins}${X}${tag}`);
     }
   }
 
   console.log(`\n  ${D}Students see exactly this list, and each video plays on the site.${X}`);
+  console.log(`  ${D}The ${free.size} marked FREE also play for a signed-in visitor who has not${X}`);
+  console.log(`  ${D}paid. Change which ones with COURSE_FREE_VIDEO_COUNT or _IDS.${X}`);
 
   if (downloadable.length === 0) {
     console.log(`\n  ${G}Downloads are off.${X} ${D}The player will not offer a download button.${X}\n`);

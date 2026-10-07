@@ -17,6 +17,30 @@ const DAY = 24 * 60 * 60 * 1000;
 const ACCESS_DAYS = Number(env('COURSE_VIDEO_ACCESS_DAYS') || 7);
 
 /**
+ * How many lessons a signed-in visitor may watch before buying.
+ *
+ * Kept small on purpose: the people who have paid must get materially more than
+ * the people who have not. The free ones are the OLDEST lessons, so the set
+ * stays put as new lessons go up rather than quietly handing away each new
+ * upload. COURSE_FREE_VIDEO_IDS overrides the choice if particular lessons
+ * should be the free ones.
+ */
+const FREE_COUNT = Number(env('COURSE_FREE_VIDEO_COUNT') || 2);
+
+const FREE_IDS = env('COURSE_FREE_VIDEO_IDS')
+  .split(/[,\s]+/)
+  .map((value) => driveIdFrom(value))
+  .filter(Boolean);
+
+const freeVideoIds = (library) => {
+  if (FREE_IDS.length) return new Set(FREE_IDS);
+  if (FREE_COUNT <= 0) return new Set();
+  const all = library.subjects.flatMap((s) => s.videos);
+  all.sort((a, b) => new Date(a.addedAt || 0).getTime() - new Date(b.addedAt || 0).getTime());
+  return new Set(all.slice(0, FREE_COUNT).map((v) => v.id));
+};
+
+/**
  * When a lesson opens for this student, and when it closes.
  *
  * Every lesson runs its own clock, started by whichever came later: the lesson
@@ -74,12 +98,53 @@ export default async function handler(req, res) {
       .limit(10)
       .get();
 
+    // Subjects and video ids, never a shareable folder link. Each lesson is
+    // played in an embedded player on our own page.
+    let library = { subjects: [], totalVideos: 0 };
+    let libraryError = null;
+    try {
+      library = await listCourseLibrary();
+    } catch (error) {
+      console.error('Could not read the course Drive folder:', error);
+      libraryError = 'Videos are being set up. Please check back shortly.';
+    }
+
+    // Signed in but has not bought: the demo, plus the handful of free
+    // lessons. Everything else is listed by name so they can see what the
+    // course holds, but WITHOUT its id, so there is nothing to play.
     if (snap.empty) {
-      // Signed in but has not bought: demo only.
+      const free = freeVideoIds(library);
+      let freeVideos = 0;
+      let lockedVideos = 0;
+
+      const subjects = library.subjects.map((subject) => ({
+        id: subject.id,
+        name: subject.name,
+        videos: subject.videos.map((video) => {
+          const isFree = free.has(video.id);
+          if (isFree) freeVideos += 1;
+          else lockedVideos += 1;
+          return {
+            ...(isFree ? { id: video.id } : {}),
+            name: video.name,
+            chapter: video.chapter,
+            durationMs: video.durationMs,
+            free: isFree,
+            locked: !isFree,
+          };
+        }),
+      }));
+
       return res.status(200).json({
         hasAccess: false,
         reason: 'not-enrolled',
         demoVideoId,
+        subjects,
+        totalVideos: library.totalVideos,
+        freeVideos,
+        lockedVideos,
+        libraryError,
+        watermark: [user.name, user.email].filter(Boolean).join('  ') || null,
         accessDays: ACCESS_DAYS,
       });
     }
@@ -95,17 +160,6 @@ export default async function handler(req, res) {
     const paidAtMs = new Date(current.paidAt).getTime();
     const overrideMs = current.videoAccessExpiresAt ? new Date(current.videoAccessExpiresAt).getTime() : 0;
     const course = getCourse(current.courseId);
-
-    // Subjects and video ids, never a shareable folder link. Each lesson is
-    // played in an embedded player on our own page.
-    let library = { subjects: [], totalVideos: 0 };
-    let libraryError = null;
-    try {
-      library = await listCourseLibrary();
-    } catch (error) {
-      console.error('Could not read the course Drive folder:', error);
-      libraryError = 'Videos are being set up. Please check back shortly.';
-    }
 
     let openVideos = 0;
     let expiredVideos = 0;

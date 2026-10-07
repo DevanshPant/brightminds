@@ -9,11 +9,15 @@ export type CourseVideo = {
   /** Set when a subject is split into chapter folders in Drive. */
   chapter?: string | null;
   durationMs: number | null;
-  expired: boolean;
-  openedAt: string;
-  expiresAt: string;
-  daysRemaining: number;
-  hoursRemaining: number;
+  /** Watchable before buying. Only set on the not-enrolled response. */
+  free?: boolean;
+  /** Needs an enrolment. Only set on the not-enrolled response. */
+  locked?: boolean;
+  expired?: boolean;
+  openedAt?: string;
+  expiresAt?: string;
+  daysRemaining?: number;
+  hoursRemaining?: number;
 };
 
 export type CourseSubject = {
@@ -30,6 +34,8 @@ export type CourseVideos = {
   totalVideos?: number;
   openVideos?: number;
   expiredVideos?: number;
+  freeVideos?: number;
+  lockedVideos?: number;
   libraryError?: string | null;
   watermark?: string | null;
   courseTitle?: string | null;

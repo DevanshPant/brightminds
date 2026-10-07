@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  AlertCircle, ArrowRight, ChevronDown, Clock, FolderOpen,
+  AlertCircle, ArrowRight, ChevronDown, Clock, FolderOpen, Radio,
   Loader2, Lock, Play, PlayCircle, Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -23,10 +23,12 @@ const formatDuration = (ms: number | null) => {
 };
 
 /** "3 days left", or hours once it is down to the last day. */
-const formatLeft = (video: CourseVideo) =>
-  video.daysRemaining === 0
-    ? `${video.hoursRemaining}h left`
-    : `${video.daysRemaining} day${video.daysRemaining === 1 ? '' : 's'} left`;
+const formatLeft = (video: CourseVideo) => {
+  const days = video.daysRemaining ?? 0;
+  return days === 0
+    ? `${video.hoursRemaining ?? 0}h left`
+    : `${days} day${days === 1 ? '' : 's'} left`;
+};
 
 /**
  * Recorded classes for enrolled students, and a demo for everyone else.
@@ -80,6 +82,12 @@ const CourseVideosSection = () => {
   const subjects = videos.subjects || [];
   const openVideos = videos.openVideos ?? 0;
   const expiredVideos = videos.expiredVideos ?? 0;
+
+  // Before buying, the lessons arrive in one list split by what is free. Only
+  // the free ones carry an id, so only those can be played.
+  const flat = subjects.flatMap((s) => s.videos.map((video) => ({ video, subjectName: s.name })));
+  const freeLessons = flat.filter((x) => x.video.free);
+  const lockedLessons = flat.filter((x) => x.video.locked);
 
   return (
     <section className="mb-14">
@@ -190,7 +198,7 @@ const CourseVideosSection = () => {
                             );
                           }
 
-                          const endingSoon = video.daysRemaining <= 2;
+                          const endingSoon = (video.daysRemaining ?? 0) <= 2;
                           return (
                             <li key={key}>
                               <button
@@ -247,64 +255,147 @@ const CourseVideosSection = () => {
         </div>
       )}
 
-      {/* Signed in, has not bought: demo only */}
+      {/* Signed in, has not bought: the demo plus a few free lessons */}
       {!hasAccess && reason === 'not-enrolled' && (
         <div className="rounded-3xl border border-primary/10 bg-gradient-golden p-6 sm:p-8">
-          <div className="flex items-center gap-3 mb-4">
+          <div className="flex items-center gap-3 mb-5">
             <div className="w-12 h-12 rounded-2xl bg-background flex items-center justify-center shrink-0">
               <PlayCircle className="w-6 h-6 text-primary" />
             </div>
-            <div>
+            <div className="min-w-0">
               <h3 className="font-display text-lg font-bold text-foreground">
-                See what a class is like
+                Start watching for free
               </h3>
               <p className="text-sm text-muted-foreground">
-                Watch a free demo before you enrol.
+                {freeLessons.length > 0
+                  ? `The demo class and ${freeLessons.length} full lecture${freeLessons.length === 1 ? '' : 's'}, on the house.`
+                  : 'Watch a free demo before you enrol.'}
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3">
-            {demoVideoId ? (
-              <Button
-                variant="hero"
-                size="lg"
-                className="w-full sm:w-auto"
-                onClick={() =>
-                  setPlaying({
-                    video: {
-                      id: demoVideoId,
-                      name: 'Demo class',
-                      durationMs: null,
-                      expired: false,
-                      openedAt: '',
-                      expiresAt: '',
-                      daysRemaining: 0,
-                      hoursRemaining: 0,
-                    },
-                    subject: 'Free preview',
-                  })
-                }
-              >
-                <PlayCircle className="w-4 h-4" />
-                Watch the demo class
-              </Button>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                A demo class will be available here shortly.
-              </p>
-            )}
-
-            <Button variant="heroOutline" size="lg" className="w-full sm:w-auto" asChild>
-              <Link to="/#courses">
-                See the course
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+          {demoVideoId ? (
+            <Button
+              variant="hero"
+              size="lg"
+              className="w-full sm:w-auto mb-5"
+              onClick={() =>
+                setPlaying({
+                  video: { id: demoVideoId, name: 'Demo class', durationMs: null },
+                  subject: 'Free preview',
+                })
+              }
+            >
+              <PlayCircle className="w-4 h-4" />
+              Watch the demo class
             </Button>
+          ) : (
+            <p className="text-sm text-muted-foreground mb-5">
+              A demo class will be available here shortly.
+            </p>
+          )}
+
+          {freeLessons.length > 0 && (
+            <div className="rounded-2xl bg-background/70 border border-primary/10 overflow-hidden mb-5">
+              <p className="px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-primary bg-primary/5">
+                Free lectures
+              </p>
+              <ul className="divide-y divide-primary/10">
+                {freeLessons.map(({ video, subjectName }) => (
+                  <li key={video.id}>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setPlaying({
+                          video,
+                          subject: video.chapter ? `${subjectName} / ${video.chapter}` : subjectName,
+                        })
+                      }
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/40 transition-colors text-left group"
+                    >
+                      <span className="w-9 h-9 rounded-full bg-gradient-accent flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                        <Play className="w-4 h-4 text-foreground" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary/80 truncate">
+                          {video.chapter ? `${subjectName} / ${video.chapter}` : subjectName}
+                        </span>
+                        <span className="block text-sm font-medium text-foreground truncate">
+                          {video.name}
+                        </span>
+                        {formatDuration(video.durationMs) && (
+                          <span className="block text-xs text-muted-foreground">
+                            {formatDuration(video.durationMs)}
+                          </span>
+                        )}
+                      </span>
+                      <span className="shrink-0 text-[11px] font-bold px-2 py-1 rounded-full bg-green-100 text-green-700">
+                        FREE
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {lockedLessons.length > 0 && (
+            <div className="rounded-2xl bg-background/50 border border-primary/10 overflow-hidden mb-5">
+              <p className="px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-muted-foreground bg-secondary/40">
+                {lockedLessons.length} more lecture{lockedLessons.length === 1 ? '' : 's'} when you enrol
+              </p>
+              <ul className="divide-y divide-primary/10">
+                {lockedLessons.slice(0, 6).map(({ video, subjectName }, i) => (
+                  <li key={`${subjectName}-${video.name}-${i}`} className="flex items-center gap-3 px-4 py-2.5">
+                    <span className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                      <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[11px] uppercase tracking-wide text-muted-foreground/70 truncate">
+                        {video.chapter ? `${subjectName} / ${video.chapter}` : subjectName}
+                      </span>
+                      <span className="block text-sm text-muted-foreground truncate">
+                        {video.name}
+                      </span>
+                    </span>
+                    {formatDuration(video.durationMs) && (
+                      <span className="shrink-0 text-xs text-muted-foreground/70">
+                        {formatDuration(video.durationMs)}
+                      </span>
+                    )}
+                  </li>
+                ))}
+                {lockedLessons.length > 6 && (
+                  <li className="px-4 py-2.5 text-xs text-muted-foreground">
+                    and {lockedLessons.length - 6} more
+                  </li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          <div className="flex items-start gap-3 rounded-2xl bg-background/70 border border-primary/15 p-4 mb-5">
+            <Radio className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              <strong className="text-foreground">Live classes are running right now.</strong>{' '}
+              Enrol and you join the live online classes as well, not only the recordings.
+            </p>
           </div>
 
+          <p className="text-sm text-muted-foreground mb-4 leading-relaxed">
+            To unlock the rest of the lectures, buy the course.
+          </p>
+
+          <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
+            <Link to="/#courses">
+              Buy the course
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </Button>
+
           <p className="text-xs text-muted-foreground mt-4">
-            Once you enrol, every lesson opens for {accessDays} days from the day it goes up.
+            Once you enrol, every lecture opens for {accessDays} days from the day it goes up,
+            including the ones added later.
           </p>
         </div>
       )}
