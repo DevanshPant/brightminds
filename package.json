@@ -30,7 +30,8 @@
     "test:golive": "node scripts/test-go-live.mjs",
     "grant:course": "node scripts/grant-course.mjs",
     "test:videos": "node scripts/test-course-videos.mjs",
-    "set:video-access": "node scripts/set-video-access.mjs"
+    "set:video-access": "node scripts/set-video-access.mjs",
+    "check:drive": "node scripts/check-drive.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -1,9 +1,12 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  AlertCircle, ArrowRight, Clock, ExternalLink, Loader2, Lock, PlayCircle, Video,
+  AlertCircle, ArrowRight, ChevronDown, Clock, FolderOpen,
+  Loader2, Lock, Play, PlayCircle, Video,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCourseVideos } from '@/hooks/useCourseVideos';
+import { useCourseVideos, type CourseVideo } from '@/hooks/useCourseVideos';
+import VideoPlayerDialog from '@/components/VideoPlayerDialog';
 
 const formatDate = (value?: string) => {
   if (!value) return '';
@@ -16,12 +19,21 @@ const formatDate = (value?: string) => {
 /**
  * Recorded classes for enrolled students, and a demo for everyone else.
  *
- * The link points at a Drive folder, so anything the teacher adds there shows
- * up for students immediately - nothing needs redeploying when a new class is
- * uploaded.
+ * The server reads the Drive folder and sends back subjects and video ids only,
+ * so anything uploaded to Drive appears here immediately - nothing needs
+ * redeploying - while students never receive a Drive link they could open or
+ * download from. Every lesson plays in VideoPlayerDialog on this page.
  */
+const formatDuration = (ms: number | null) => {
+  if (!ms) return null;
+  const mins = Math.round(ms / 60000);
+  return mins < 60 ? `${mins} min` : `${Math.floor(mins / 60)}h ${mins % 60}m`;
+};
+
 const CourseVideosSection = () => {
   const { videos, loading, error } = useCourseVideos();
+  const [playing, setPlaying] = useState<{ video: CourseVideo; subject: string } | null>(null);
+  const [openSubject, setOpenSubject] = useState<string | null>(null);
 
   if (loading && !videos) {
     return (
@@ -53,7 +65,8 @@ const CourseVideosSection = () => {
 
   if (!videos) return null;
 
-  const { hasAccess, reason, demoUrl, recordingsUrl, daysRemaining, hoursRemaining, expiresAt, accessDays } = videos;
+  const { hasAccess, reason, demoVideoId, daysRemaining, hoursRemaining, expiresAt, accessDays, libraryError } = videos;
+  const subjects = videos.subjects || [];
   const endingSoon = hasAccess && (daysRemaining ?? 99) <= 2;
 
   return (
@@ -62,8 +75,14 @@ const CourseVideosSection = () => {
         Course videos
       </h2>
 
+      <VideoPlayerDialog
+        video={playing?.video ?? null}
+        subjectName={playing?.subject}
+        onClose={() => setPlaying(null)}
+      />
+
       {/* Enrolled, inside the window */}
-      {hasAccess && recordingsUrl && (
+      {hasAccess && (
         <div className="rounded-3xl border border-primary/15 bg-card p-6 sm:p-8 shadow-golden">
           <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
             <div className="flex items-center gap-3 min-w-0">
@@ -92,17 +111,77 @@ const CourseVideosSection = () => {
             </span>
           </div>
 
-          <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
-            <a href={recordingsUrl} target="_blank" rel="noopener noreferrer">
-              <PlayCircle className="w-4 h-4" />
-              Watch recorded classes
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </Button>
+          {libraryError ? (
+            <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-muted-foreground">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              {libraryError}
+            </div>
+          ) : subjects.length === 0 ? (
+            <div className="rounded-2xl bg-secondary/50 p-5 text-sm text-muted-foreground">
+              No lessons have been uploaded yet. They will appear here automatically.
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {subjects.map((subject) => {
+                const open = openSubject === subject.id;
+                return (
+                  <div key={subject.id} className="rounded-2xl border border-primary/10 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setOpenSubject(open ? null : subject.id)}
+                      aria-expanded={open}
+                      className="w-full flex items-center justify-between gap-3 px-4 py-3.5 bg-secondary/50 hover:bg-secondary transition-colors text-left"
+                    >
+                      <span className="flex items-center gap-3 min-w-0">
+                        <FolderOpen className="w-5 h-5 text-primary shrink-0" />
+                        <span className="font-display font-bold text-foreground truncate">
+                          {subject.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground shrink-0">
+                          {subject.videos.length} lesson{subject.videos.length === 1 ? '' : 's'}
+                        </span>
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-300 ${open ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+
+                    {open && (
+                      <ul className="divide-y divide-primary/10">
+                        {subject.videos.map((video) => (
+                          <li key={video.id}>
+                            <button
+                              type="button"
+                              onClick={() => setPlaying({ video, subject: subject.name })}
+                              className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/40 transition-colors text-left group"
+                            >
+                              <span className="w-9 h-9 rounded-full bg-gradient-accent flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                                <Play className="w-4 h-4 text-foreground" />
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block text-sm font-medium text-foreground truncate">
+                                  {video.name}
+                                </span>
+                                {formatDuration(video.durationMs) && (
+                                  <span className="block text-xs text-muted-foreground">
+                                    {formatDuration(video.durationMs)}
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           <p className="text-xs text-muted-foreground mt-4 leading-relaxed">
             Your access runs until <strong className="text-foreground">{formatDate(expiresAt)}</strong>.
-            Please do not share this link - it is tied to your enrolment.
+            Lessons play here and are for your personal study only.
           </p>
         </div>
       )}
@@ -151,13 +230,20 @@ const CourseVideosSection = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            {demoUrl ? (
-              <Button variant="hero" size="lg" className="w-full sm:w-auto" asChild>
-                <a href={demoUrl} target="_blank" rel="noopener noreferrer">
-                  <PlayCircle className="w-4 h-4" />
-                  Watch the demo class
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+            {demoVideoId ? (
+              <Button
+                variant="hero"
+                size="lg"
+                className="w-full sm:w-auto"
+                onClick={() =>
+                  setPlaying({
+                    video: { id: demoVideoId, name: 'Demo class', durationMs: null, addedAt: null },
+                    subject: 'Free preview',
+                  })
+                }
+              >
+                <PlayCircle className="w-4 h-4" />
+                Watch the demo class
               </Button>
             ) : (
               <p className="text-sm text-muted-foreground">

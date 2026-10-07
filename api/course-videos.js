@@ -1,6 +1,7 @@
 import { applyCors, fail, methodGuard } from './_lib/http.js';
 import { adminDb, requireUser } from './_lib/firebaseAdmin.js';
 import { getCourse } from './_lib/courses.js';
+import { listCourseLibrary } from './_lib/drive.js';
 
 /** Quotes are .env syntax; a dashboard stores them literally. */
 const env = (name) => {
@@ -36,8 +37,12 @@ export default async function handler(req, res) {
     return fail(res, error.status || 401, error.message, error.cause);
   }
 
-  const demoUrl = env('COURSE_DEMO_VIDEO_URL') || null;
-  const recordingsUrl = env('COURSE_RECORDINGS_URL') || null;
+  // Only the Drive file id, never the /view link: the demo plays in the same
+  // embedded player as the lessons, so no video can be opened in Drive.
+  const demoRaw = env('COURSE_DEMO_VIDEO_URL');
+  const demoVideoId =
+    (demoRaw.match(/\/d\/([-\w]+)/) || demoRaw.match(/[?&]id=([-\w]+)/) || [])[1]
+    || (/^[-\w]{20,}$/.test(demoRaw) ? demoRaw : null);
 
   try {
     const snap = await adminDb()
@@ -52,7 +57,7 @@ export default async function handler(req, res) {
       return res.status(200).json({
         hasAccess: false,
         reason: 'not-enrolled',
-        demoUrl,
+        demoVideoId,
         accessDays: ACCESS_DAYS,
       });
     }
@@ -78,18 +83,31 @@ export default async function handler(req, res) {
       return res.status(200).json({
         hasAccess: false,
         reason: 'expired',
-        demoUrl,
+        demoVideoId,
         courseTitle: current.courseTitle || course?.title || null,
         expiresAt: new Date(expiresAt).toISOString(),
         accessDays: ACCESS_DAYS,
       });
     }
 
+    // Subjects and video ids, never a shareable folder link. Each video is
+    // played in an embedded player on our own page.
+    let library = { subjects: [], totalVideos: 0 };
+    let libraryError = null;
+    try {
+      library = await listCourseLibrary();
+    } catch (error) {
+      console.error('Could not read the course Drive folder:', error);
+      libraryError = 'Videos are being set up. Please check back shortly.';
+    }
+
     const msLeft = expiresAt - now;
     return res.status(200).json({
       hasAccess: true,
-      demoUrl,
-      recordingsUrl,
+      demoVideoId,
+      subjects: library.subjects,
+      totalVideos: library.totalVideos,
+      libraryError,
       courseTitle: current.courseTitle || course?.title || null,
       receiptNo: current.receiptNo || null,
       paidAt: current.paidAt,

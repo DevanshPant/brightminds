@@ -2,11 +2,26 @@ import { useCallback, useEffect, useState } from 'react';
 import { apiPost } from '@/lib/api';
 import { useAuth } from '@/contexts/auth-context';
 
+export type CourseVideo = {
+  id: string;
+  name: string;
+  durationMs: number | null;
+  addedAt: string | null;
+};
+
+export type CourseSubject = {
+  id: string;
+  name: string;
+  videos: CourseVideo[];
+};
+
 export type CourseVideos = {
   hasAccess: boolean;
   reason?: 'not-enrolled' | 'expired';
-  demoUrl: string | null;
-  recordingsUrl?: string | null;
+  demoVideoId: string | null;
+  subjects?: CourseSubject[];
+  totalVideos?: number;
+  libraryError?: string | null;
   courseTitle?: string | null;
   receiptNo?: string | null;
   paidAt?: string;
@@ -19,9 +34,9 @@ export type CourseVideos = {
 /**
  * Course video access for the signed-in student.
  *
- * The recordings link is never held in the browser bundle or in Firestore -
- * the server returns it only while the access window is open, so it cannot be
- * recovered from a stale page or an expired enrolment record.
+ * The server returns the subject and video list only while the access window
+ * is open. No shareable Drive link is ever sent to the browser, so a lesson
+ * cannot be passed on by copying a URL out of the page.
  */
 export const useCourseVideos = () => {
   const { user, getToken } = useAuth();

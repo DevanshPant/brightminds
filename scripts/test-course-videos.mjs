@@ -1,12 +1,14 @@
 /**
- * Tests who can reach the recordings link, against the live project.
+ * Tests who can reach the course videos, against the live project.
  *
  *   npm run test:videos
  *
- * The link is the paid benefit, so the cases that matter are the refusals:
+ * The videos are the paid benefit, so the cases that matter are the refusals:
  * a signed-out visitor, a signed-in student who has not bought, and a student
- * whose access window has closed must all be refused. Creates throwaway users
- * and cleans up after itself.
+ * whose access window has closed must all be refused. Every response is also
+ * checked for the Drive folder id, because a student who could read that could
+ * open the folder directly and download from it. Creates throwaway users and
+ * cleans up after itself.
  */
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -26,7 +28,7 @@ for (const raw of (await readFile(path.join(root, '.env'), 'utf8')).split(/\r?\n
 }
 
 const API_KEY = process.env.VITE_FIREBASE_API_KEY;
-const RECORDINGS = process.env.COURSE_RECORDINGS_URL;
+const FOLDER_ID = process.env.COURSE_DRIVE_FOLDER_ID;
 
 let passed = 0, failed = 0;
 const check = (name, ok, detail) => {
@@ -69,7 +71,7 @@ console.log('\nCourse video access\n');
 
 try {
   console.log('Setup');
-  check('COURSE_RECORDINGS_URL configured', Boolean(RECORDINGS));
+  check('COURSE_DRIVE_FOLDER_ID configured', Boolean(FOLDER_ID));
 
   for (const uid of [FRESH, EXPIRED, NOBUY]) {
     await auth.createUser({ uid, email: `${uid}@example.com`, displayName: 'Video Test' });
@@ -97,7 +99,28 @@ try {
   console.log('\nEnrolled, 2 days in');
   const fresh = await callAs(FRESH);
   check('access granted', fresh.body?.hasAccess === true, JSON.stringify(fresh.body));
-  check('recordings link returned', fresh.body?.recordingsUrl === RECORDINGS);
+  check('no Drive link anywhere in the response',
+        !JSON.stringify(fresh.body).includes('drive.google.com'),
+        'A STUDENT COULD OPEN DRIVE DIRECTLY');
+  check('demo is an id, not a link', !fresh.body?.demoUrl);
+  check('library is reachable, or fails with a message for the student',
+        Array.isArray(fresh.body?.subjects)
+          && (fresh.body.subjects.length > 0 || Boolean(fresh.body?.libraryError)),
+        fresh.body?.libraryError || JSON.stringify(fresh.body?.subjects));
+  if (fresh.body?.subjects?.length) {
+    const videos = fresh.body.subjects.flatMap((s) => s.videos || []);
+    check('every subject has a name and videos',
+          fresh.body.subjects.every((s) => s.name && Array.isArray(s.videos) && s.videos.length));
+    check('every video carries an id and a name',
+          videos.length > 0 && videos.every((v) => v.id && v.name), `${videos.length} videos`);
+    check('totalVideos matches the subject lists',
+          fresh.body.totalVideos === videos.length,
+          `${fresh.body.totalVideos} vs ${videos.length}`);
+    check('no file extensions left in lesson names',
+          videos.every((v) => !/\.(mp4|mkv|mov|webm|avi)$/i.test(v.name)));
+  } else {
+    console.log(`       ${D}Drive not readable yet: ${fresh.body?.libraryError || 'no subjects'}${X}`);
+  }
   check('days remaining looks right', fresh.body?.daysRemaining === 5,
         `got ${fresh.body?.daysRemaining}, expected 5`);
   check('expiry is reported', Boolean(fresh.body?.expiresAt));
@@ -107,27 +130,31 @@ try {
   const expired = await callAs(EXPIRED);
   check('access refused', expired.body?.hasAccess === false);
   check('reason is "expired"', expired.body?.reason === 'expired');
-  check('recordings link NOT returned', !expired.body?.recordingsUrl,
+  check('no videos returned', !expired.body?.subjects?.length,
         'AN EXPIRED STUDENT COULD STILL WATCH');
-  check('whole response is free of the link',
-        !JSON.stringify(expired.body).includes(RECORDINGS));
+  check('whole response is free of the Drive folder id',
+        !JSON.stringify(expired.body).includes(FOLDER_ID));
 
   // ---- signed in, never bought ---------------------------------------------
   console.log('\nSigned in, never bought');
   const nobuy = await callAs(NOBUY);
   check('access refused', nobuy.body?.hasAccess === false);
   check('reason is "not-enrolled"', nobuy.body?.reason === 'not-enrolled');
-  check('recordings link NOT returned', !nobuy.body?.recordingsUrl,
+  check('demo offered as an id only',
+        !JSON.stringify(nobuy.body).includes('drive.google.com'),
+        'THE DEMO COULD BE OPENED IN DRIVE');
+  check('no videos returned', !nobuy.body?.subjects?.length,
         'A NON-PAYING USER COULD WATCH');
-  check('whole response is free of the link',
-        !JSON.stringify(nobuy.body).includes(RECORDINGS));
+  check('whole response is free of the Drive folder id',
+        !JSON.stringify(nobuy.body).includes(FOLDER_ID));
 
   // ---- not signed in at all ------------------------------------------------
   console.log('\nNot signed in');
   const anon = mockRes();
   await handler({ method: 'POST', headers: {}, body: {} }, anon);
   check('rejected with 401', anon.statusCode === 401);
-  check('no link in the response', !JSON.stringify(anon.body).includes(RECORDINGS));
+  check('no Drive folder id in the response',
+        !JSON.stringify(anon.body).includes(FOLDER_ID));
 
   const wrongMethod = mockRes();
   await handler({ method: 'GET', headers: {}, body: {} }, wrongMethod);
@@ -141,7 +168,11 @@ try {
   const extended = await callAs(EXPIRED);
   check('extending videoAccessExpiresAt restores access', extended.body?.hasAccess === true,
         JSON.stringify(extended.body));
-  check('link returned again', extended.body?.recordingsUrl === RECORDINGS);
+  check('videos reachable again',
+        Array.isArray(extended.body?.subjects)
+          && (extended.body.subjects.length > 0 || Boolean(extended.body?.libraryError)));
+  check('still no Drive link anywhere',
+        !JSON.stringify(extended.body).includes('drive.google.com'));
 } catch (error) {
   failed += 1;
   console.log(`\n  ${R}ERROR${X} ${error.message}`);
