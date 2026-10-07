@@ -69,6 +69,21 @@ const VideoPlayerDialog = ({ video, subjectName, onClose }: Props) => {
         </div>
 
         <div className="relative w-full rounded-2xl overflow-hidden bg-black shadow-2xl" style={{ aspectRatio: '16 / 9' }}>
+          {/*
+            Drive draws its own download and pop-out buttons in the top-right
+            of the player, and they are inside a cross-origin frame, so they
+            cannot be styled away. This pad sits over them and swallows the
+            click. The real fix is turning off "Viewers can download, print and
+            copy" on each file, which npm run check:drive reports on; this only
+            covers files owned by other teachers, where that cannot be set.
+            It is deliberately small, so the playback controls along the bottom
+            and the centre of the picture stay clickable.
+          */}
+          <div
+            aria-hidden="true"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute top-0 right-0 h-14 w-32 z-10 cursor-default"
+          />
           <iframe
             src={`https://drive.google.com/file/d/${video.id}/preview`}
             title={video.name}
