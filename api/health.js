@@ -54,7 +54,18 @@ export default async function handler(req, res) {
 
   // Course videos. The Drive folder is read only when asked for with ?drive=1,
   // because it costs several Drive calls and this endpoint is hit often.
-  const driveFolder = Boolean(env('COURSE_DRIVE_FOLDER_ID'));
+  const driveFolderRaw = process.env.COURSE_DRIVE_FOLDER_ID || '';
+  const driveFolderId = env('COURSE_DRIVE_FOLDER_ID');
+  const driveFolder = Boolean(driveFolderId);
+  // Enough to spot a pasted URL, stray quotes or a truncated value, without
+  // printing the id itself.
+  const driveFolderShape = {
+    rawLength: driveFolderRaw.length,
+    cleanedLength: driveFolderId.length,
+    startsWith: driveFolderId.slice(0, 4),
+    looksLikeUrl: /[:/]/.test(driveFolderId),
+    hasWhitespace: /\s/.test(driveFolderRaw),
+  };
   if (!driveFolder) problems.push('COURSE_DRIVE_FOLDER_ID is missing - enrolled students will see no videos.');
 
   let driveLibrary;
@@ -98,6 +109,7 @@ export default async function handler(req, res) {
       siteUrl: env('SITE_URL') || null,
       whatsappLink: Boolean(env('WHATSAPP_COMMUNITY_LINK')),
       courseDriveFolder: driveFolder,
+      courseDriveFolderShape: driveFolderShape,
       courseDemoVideo: Boolean(env('COURSE_DEMO_VIDEO_URL')),
       courseVideoAccessDays: Number(env('COURSE_VIDEO_ACCESS_DAYS') || 7),
       ...(driveLibrary ? { driveLibrary } : {}),
