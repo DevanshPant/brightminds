@@ -54,19 +54,19 @@ export default async function handler(req, res) {
 
   // Course videos. The Drive folder is read only when asked for with ?drive=1,
   // because it costs several Drive calls and this endpoint is hit often.
-  const driveFolderRaw = process.env.COURSE_DRIVE_FOLDER_ID || '';
-  const driveFolderId = env('COURSE_DRIVE_FOLDER_ID');
-  const driveFolder = Boolean(driveFolderId);
-  // Enough to spot a pasted URL, stray quotes or a truncated value, without
-  // printing the id itself.
-  const driveFolderShape = {
-    rawLength: driveFolderRaw.length,
-    cleanedLength: driveFolderId.length,
-    startsWith: driveFolderId.slice(0, 4),
-    looksLikeUrl: /[:/]/.test(driveFolderId),
-    hasWhitespace: /\s/.test(driveFolderRaw),
-  };
-  if (!driveFolder) problems.push('COURSE_DRIVE_FOLDER_ID is missing - enrolled students will see no videos.');
+  const { driveIdFrom } = await import('./_lib/drive.js');
+  const driveFolderSet = Boolean(env('COURSE_DRIVE_FOLDER_ID'));
+  // A folder URL is accepted as well as a bare id, so what matters is whether
+  // an id could be read out of the value at all. The id itself is not printed.
+  const driveFolder = Boolean(driveIdFrom(env('COURSE_DRIVE_FOLDER_ID')));
+  if (driveFolderSet && !driveFolder) {
+    problems.push('COURSE_DRIVE_FOLDER_ID is set but is neither a Drive folder id nor a folder URL.');
+  }
+  if (!driveFolderSet) problems.push('COURSE_DRIVE_FOLDER_ID is missing - enrolled students will see no videos.');
+
+  if (!env('COURSE_DEMO_VIDEO_URL')) {
+    problems.push('COURSE_DEMO_VIDEO_URL is missing - signed-in visitors see no demo class.');
+  }
 
   let driveLibrary;
   if (driveFolder && 'drive' in (req.query || {})) {
@@ -109,7 +109,7 @@ export default async function handler(req, res) {
       siteUrl: env('SITE_URL') || null,
       whatsappLink: Boolean(env('WHATSAPP_COMMUNITY_LINK')),
       courseDriveFolder: driveFolder,
-      courseDriveFolderShape: driveFolderShape,
+
       courseDemoVideo: Boolean(env('COURSE_DEMO_VIDEO_URL')),
       courseVideoAccessDays: Number(env('COURSE_VIDEO_ACCESS_DAYS') || 7),
       ...(driveLibrary ? { driveLibrary } : {}),

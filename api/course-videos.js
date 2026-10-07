@@ -1,7 +1,7 @@
 import { applyCors, fail, methodGuard } from './_lib/http.js';
 import { adminDb, requireUser } from './_lib/firebaseAdmin.js';
 import { getCourse } from './_lib/courses.js';
-import { listCourseLibrary } from './_lib/drive.js';
+import { driveIdFrom, listCourseLibrary } from './_lib/drive.js';
 
 /** Quotes are .env syntax; a dashboard stores them literally. */
 const env = (name) => {
@@ -39,10 +39,7 @@ export default async function handler(req, res) {
 
   // Only the Drive file id, never the /view link: the demo plays in the same
   // embedded player as the lessons, so no video can be opened in Drive.
-  const demoRaw = env('COURSE_DEMO_VIDEO_URL');
-  const demoVideoId =
-    (demoRaw.match(/\/d\/([-\w]+)/) || demoRaw.match(/[?&]id=([-\w]+)/) || [])[1]
-    || (/^[-\w]{20,}$/.test(demoRaw) ? demoRaw : null);
+  const demoVideoId = driveIdFrom(env('COURSE_DEMO_VIDEO_URL'));
 
   try {
     const snap = await adminDb()

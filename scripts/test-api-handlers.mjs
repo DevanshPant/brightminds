@@ -311,6 +311,44 @@ await test('never leaks student data without a verified admin token', async () =
   assert.notEqual(res.statusCode, 200);
 });
 
+console.log('\nDrive id from a setting');
+
+const { driveIdFrom } = await import('../api/_lib/drive.js');
+
+await test('accepts a folder URL, which is what the clipboard gives you', () => {
+  assert.equal(
+    driveIdFrom('https://drive.google.com/drive/folders/18UobfxSspHzxfQC8lDdrAr-zPjiNVHok'),
+    '18UobfxSspHzxfQC8lDdrAr-zPjiNVHok',
+  );
+  assert.equal(
+    driveIdFrom('https://drive.google.com/drive/folders/18UobfxSspHzxfQC8lDdrAr-zPjiNVHok?usp=sharing'),
+    '18UobfxSspHzxfQC8lDdrAr-zPjiNVHok',
+  );
+  assert.equal(
+    driveIdFrom('https://drive.google.com/drive/u/0/folders/18UobfxSspHzxfQC8lDdrAr-zPjiNVHok'),
+    '18UobfxSspHzxfQC8lDdrAr-zPjiNVHok',
+  );
+});
+
+await test('accepts a file URL and an open?id= URL', () => {
+  assert.equal(driveIdFrom('https://drive.google.com/file/d/1tsTabcdefghijklmnop/view?usp=drive_link'),
+    '1tsTabcdefghijklmnop');
+  assert.equal(driveIdFrom('https://drive.google.com/open?id=1tsTabcdefghijklmnop'),
+    '1tsTabcdefghijklmnop');
+});
+
+await test('accepts a bare id unchanged', () => {
+  assert.equal(driveIdFrom('18UobfxSspHzxfQC8lDdrAr-zPjiNVHok'), '18UobfxSspHzxfQC8lDdrAr-zPjiNVHok');
+  assert.equal(driveIdFrom('  18UobfxSspHzxfQC8lDdrAr-zPjiNVHok  '), '18UobfxSspHzxfQC8lDdrAr-zPjiNVHok');
+});
+
+await test('refuses nonsense rather than asking Drive for it', () => {
+  assert.equal(driveIdFrom(''), null);
+  assert.equal(driveIdFrom('   '), null);
+  assert.equal(driveIdFrom(undefined), null);
+  assert.equal(driveIdFrom('not an id'), null);
+});
+
 console.error = originalError;
 
 console.log(`\n${failed === 0 ? '✓' : '✗'} ${passed} passed, ${failed} failed\n`);

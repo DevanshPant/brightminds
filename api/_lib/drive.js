@@ -65,6 +65,24 @@ const api = async (params) => {
 
 const FOLDER_MIME = 'application/vnd.google-apps.folder';
 
+/**
+ * The id from whatever was pasted into the setting.
+ *
+ * A Drive folder's id is easy to confuse with the URL it appears in, and the
+ * URL is what the browser puts on the clipboard, so both are accepted. Drive's
+ * own error for a URL is "File not found: ." which says nothing useful.
+ */
+export const driveIdFrom = (value) => {
+  const raw = (value || '').trim();
+  if (!raw) return null;
+  const match =
+    raw.match(/\/folders\/([-\w]+)/)
+    || raw.match(/\/d\/([-\w]+)/)
+    || raw.match(/[?&]id=([-\w]+)/);
+  if (match) return match[1];
+  return /^[-\w]{10,}$/.test(raw) ? raw : null;
+};
+
 const listChildren = (folderId) =>
   api({
     q: `'${folderId}' in parents and trashed = false`,
@@ -121,14 +139,14 @@ async function collectVideos(folderId, chapter, depth, seen) {
  * Returns only ids, names and durations - never a shareable folder URL.
  */
 export async function listCourseLibrary() {
-  const rootId = env('COURSE_DRIVE_FOLDER_ID');
-  if (!rootId) throw new Error('COURSE_DRIVE_FOLDER_ID is not set.');
+  const configured = env('COURSE_DRIVE_FOLDER_ID');
+  if (!configured) throw new Error('COURSE_DRIVE_FOLDER_ID is not set.');
+
+  const rootId = driveIdFrom(configured);
+  if (!rootId) throw new Error('COURSE_DRIVE_FOLDER_ID is not a Drive folder id or URL.');
 
   // The demo is offered separately to everyone, so it is not a lesson.
-  const demoRaw = env('COURSE_DEMO_VIDEO_URL');
-  const demoId =
-    (demoRaw.match(/\/d\/([-\w]+)/) || demoRaw.match(/[?&]id=([-\w]+)/) || [])[1]
-    || (/^[-\w]{20,}$/.test(demoRaw) ? demoRaw : null);
+  const demoId = driveIdFrom(env('COURSE_DEMO_VIDEO_URL'));
 
   const { files = [] } = await listChildren(rootId);
   const seen = new Set([rootId]);
