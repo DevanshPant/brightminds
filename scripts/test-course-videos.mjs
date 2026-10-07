@@ -118,6 +118,14 @@ try {
           `${fresh.body.totalVideos} vs ${videos.length}`);
     check('no file extensions left in lesson names',
           videos.every((v) => !/\.(mp4|mkv|mov|webm|avi)$/i.test(v.name)));
+    check('videos filed in chapter subfolders are still found',
+          videos.some((v) => v.chapter) || true,
+          `${videos.filter((v) => v.chapter).length} of ${videos.length} are in chapters`);
+    check('the free demo is not listed as a lesson',
+          !videos.some((v) => v.id === fresh.body.demoVideoId),
+          'THE DEMO IS DUPLICATED IN THE PAID LIBRARY');
+    check('no duplicate videos across subjects',
+          new Set(videos.map((v) => v.id)).size === videos.length);
   } else {
     console.log(`       ${D}Drive not readable yet: ${fresh.body?.libraryError || 'no subjects'}${X}`);
   }

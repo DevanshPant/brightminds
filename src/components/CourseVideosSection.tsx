@@ -152,13 +152,23 @@ const CourseVideosSection = () => {
                           <li key={video.id}>
                             <button
                               type="button"
-                              onClick={() => setPlaying({ video, subject: subject.name })}
+                              onClick={() =>
+                                setPlaying({
+                                  video,
+                                  subject: video.chapter ? `${subject.name} / ${video.chapter}` : subject.name,
+                                })
+                              }
                               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-secondary/40 transition-colors text-left group"
                             >
                               <span className="w-9 h-9 rounded-full bg-gradient-accent flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                                 <Play className="w-4 h-4 text-foreground" />
                               </span>
                               <span className="min-w-0 flex-1">
+                                {video.chapter && (
+                                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary/80 truncate">
+                                    {video.chapter}
+                                  </span>
+                                )}
                                 <span className="block text-sm font-medium text-foreground truncate">
                                   {video.name}
                                 </span>

@@ -17,7 +17,7 @@ const env = (name) => {
  * secret: keys are reported as booleans, addresses are shown because they are
  * not secret and are exactly what goes wrong.
  */
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (applyCors(req, res)) return;
 
   const firebaseAdmin = Boolean(
@@ -52,6 +52,35 @@ export default function handler(req, res) {
     problems.push('RAZORPAY_WEBHOOK_SECRET is missing - a payment is lost if the browser closes early.');
   }
 
+  // Course videos. The Drive folder is read only when asked for with ?drive=1,
+  // because it costs several Drive calls and this endpoint is hit often.
+  const driveFolder = Boolean(env('COURSE_DRIVE_FOLDER_ID'));
+  if (!driveFolder) problems.push('COURSE_DRIVE_FOLDER_ID is missing - enrolled students will see no videos.');
+
+  let driveLibrary;
+  if (driveFolder && 'drive' in (req.query || {})) {
+    try {
+      const { listCourseLibrary } = await import('./_lib/drive.js');
+      const { subjects, totalVideos, downloadable } = await listCourseLibrary();
+      driveLibrary = {
+        readable: true,
+        subjects: subjects.map((s) => ({ name: s.name, videos: s.videos.length })),
+        totalVideos,
+        downloadableCount: downloadable.length,
+      };
+      if (totalVideos === 0) problems.push('The course Drive folder is readable but holds no videos.');
+      if (downloadable.length > 0) {
+        problems.push(
+          `Drive still offers ${downloadable.length} of ${totalVideos} videos for download. ` +
+            'Turn off "Viewers can download, print and copy" on those files.',
+        );
+      }
+    } catch (error) {
+      driveLibrary = { readable: false, error: error.message };
+      problems.push(`The course Drive folder cannot be read: ${error.message}`);
+    }
+  }
+
   return res.status(200).json({
     status: problems.length === 0 ? 'ok' : 'degraded',
     time: new Date().toISOString(),
@@ -68,6 +97,10 @@ export default function handler(req, res) {
       adminAllowlist: Boolean(env('VITE_ADMIN_EMAILS')),
       siteUrl: env('SITE_URL') || null,
       whatsappLink: Boolean(env('WHATSAPP_COMMUNITY_LINK')),
+      courseDriveFolder: driveFolder,
+      courseDemoVideo: Boolean(env('COURSE_DEMO_VIDEO_URL')),
+      courseVideoAccessDays: Number(env('COURSE_VIDEO_ACCESS_DAYS') || 7),
+      ...(driveLibrary ? { driveLibrary } : {}),
     },
     problems,
   });

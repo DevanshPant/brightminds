@@ -1,12 +1,13 @@
 /**
- * Checks the course Drive folder is readable by the site.
+ * Checks the course Drive folder is readable by the site, and that Drive is not
+ * still offering the videos for download.
  *
  *   npm run check:drive
  *
- * Three things have to be true, and each one fails with a different message so
- * it is clear which step is outstanding: the Drive API has to be enabled on the
- * Google Cloud project, the folder has to be shared with the service account,
- * and the subject folders have to contain videos.
+ * Each setup step fails with its own message, so it is always clear which one
+ * is outstanding: the Drive API being enabled on the Google Cloud project, the
+ * folder being shared with the service account, videos being present, and
+ * "Viewers can download, print and copy" being turned off.
  */
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -37,23 +38,39 @@ if (!process.env.COURSE_DRIVE_FOLDER_ID) {
 
 try {
   const { listCourseLibrary } = await import('../api/_lib/drive.js');
-  const { subjects, totalVideos } = await listCourseLibrary();
+  const { subjects, totalVideos, downloadable } = await listCourseLibrary();
 
   if (totalVideos === 0) {
     console.log(`  ${Y}The folder is readable, but no videos were found.${X}`);
-    console.log(`  ${D}Put each video inside a subject folder. Google Docs and PDFs are ignored.${X}\n`);
+    console.log(`  ${D}Put each video inside a subject folder. Documents and PDFs are ignored.${X}\n`);
     process.exit(1);
   }
 
   console.log(`  ${G}Readable.${X} ${subjects.length} subject${subjects.length === 1 ? '' : 's'}, ${totalVideos} video${totalVideos === 1 ? '' : 's'}.\n`);
+
   for (const subject of subjects) {
     console.log(`  ${subject.name}  ${D}(${subject.videos.length})${X}`);
     for (const video of subject.videos) {
       const mins = video.durationMs ? `${Math.round(video.durationMs / 60000)} min` : 'duration unknown';
-      console.log(`    ${D}-${X} ${video.name}  ${D}${mins}${X}`);
+      const chapter = video.chapter ? `${D}[${video.chapter}]${X} ` : '';
+      console.log(`    ${D}-${X} ${chapter}${video.name}  ${D}${mins}${X}`);
     }
   }
-  console.log(`\n  ${D}Students see exactly this list, and each video plays on the site.${X}\n`);
+
+  console.log(`\n  ${D}Students see exactly this list, and each video plays on the site.${X}`);
+
+  if (downloadable.length === 0) {
+    console.log(`\n  ${G}Downloads are off.${X} ${D}The player will not offer a download button.${X}\n`);
+  } else {
+    console.log(`\n  ${R}Drive will still let students download ${downloadable.length} of ${totalVideos} video${totalVideos === 1 ? '' : 's'}.${X}`);
+    console.log(`  ${D}The embedded player shows Drive's own download button for these files.${X}\n`);
+    for (const name of downloadable) console.log(`    ${D}-${X} ${name}`);
+    console.log(`\n  ${D}Fix, per file, in Drive: right-click the video > Share > the gear icon >${X}`);
+    console.log(`  ${D}untick "Viewers and commenters can see the option to download, print,${X}`);
+    console.log(`  ${D}and copy". Only the file's OWNER or an editor can change this, so any${X}`);
+    console.log(`  ${D}video uploaded by another teacher has to be changed from that account.${X}\n`);
+    process.exit(1);
+  }
 } catch (error) {
   const message = error.message || String(error);
   console.log(`  ${R}Could not read the folder.${X}\n`);

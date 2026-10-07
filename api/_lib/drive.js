@@ -63,15 +63,56 @@ const api = async (params) => {
   return body;
 };
 
-const listChildren = (folderId, extraQuery) =>
+const FOLDER_MIME = 'application/vnd.google-apps.folder';
+
+const listChildren = (folderId) =>
   api({
-    q: `'${folderId}' in parents and trashed = false${extraQuery || ''}`,
-    fields: 'files(id,name,mimeType,videoMediaMetadata(durationMillis),createdTime,modifiedTime,thumbnailLink)',
+    q: `'${folderId}' in parents and trashed = false`,
+    fields:
+      'files(id,name,mimeType,videoMediaMetadata(durationMillis),createdTime,capabilities(canDownload),copyRequiresWriterPermission)',
     orderBy: 'name_natural',
     pageSize: '200',
     supportsAllDrives: 'true',
     includeItemsFromAllDrives: 'true',
   });
+
+const isVideo = (f) => typeof f.mimeType === 'string' && f.mimeType.startsWith('video/');
+
+const toVideo = (f, chapter) => ({
+  id: f.id,
+  // Drop the file extension, which students have no use for.
+  name: f.name.replace(/\.[^.]+$/, '').trim(),
+  // The folder path below the subject, when a subject is split into chapters.
+  chapter: chapter || null,
+  durationMs: Number(f.videoMediaMetadata?.durationMillis) || null,
+  addedAt: f.createdTime || null,
+  // True when Drive would still offer this file for download inside the player.
+  downloadable: f.copyRequiresWriterPermission !== true,
+});
+
+/**
+ * Every video inside a subject, however deeply it is filed.
+ *
+ * Subjects are not filed consistently: some hold their videos directly, others
+ * are split into chapter folders. Walking the whole subtree means neither
+ * arrangement quietly disappears from the site, which is what happened when
+ * this only looked one level down.
+ */
+async function collectVideos(folderId, chapter, depth, seen) {
+  if (depth > 4 || seen.has(folderId)) return [];
+  seen.add(folderId);
+
+  const { files = [] } = await listChildren(folderId);
+  const videos = files.filter(isVideo).map((f) => toVideo(f, chapter));
+
+  const nested = await Promise.all(
+    files
+      .filter((f) => f.mimeType === FOLDER_MIME)
+      .map((f) => collectVideos(f.id, chapter ? `${chapter} / ${f.name.trim()}` : f.name.trim(), depth + 1, seen)),
+  );
+
+  return videos.concat(...nested);
+}
 
 /**
  * The course library: each subject folder with the videos inside it.
@@ -83,36 +124,37 @@ export async function listCourseLibrary() {
   const rootId = env('COURSE_DRIVE_FOLDER_ID');
   if (!rootId) throw new Error('COURSE_DRIVE_FOLDER_ID is not set.');
 
-  const root = await listChildren(rootId);
-  const folders = (root.files || []).filter((f) => f.mimeType === 'application/vnd.google-apps.folder');
-  const looseVideos = (root.files || []).filter((f) => f.mimeType?.startsWith('video/'));
+  // The demo is offered separately to everyone, so it is not a lesson.
+  const demoRaw = env('COURSE_DEMO_VIDEO_URL');
+  const demoId =
+    (demoRaw.match(/\/d\/([-\w]+)/) || demoRaw.match(/[?&]id=([-\w]+)/) || [])[1]
+    || (/^[-\w]{20,}$/.test(demoRaw) ? demoRaw : null);
 
-  const toVideo = (f) => ({
-    id: f.id,
-    name: f.name.replace(/\.[^.]+$/, ''),
-    durationMs: Number(f.videoMediaMetadata?.durationMillis) || null,
-    addedAt: f.createdTime || null,
-  });
+  const { files = [] } = await listChildren(rootId);
+  const seen = new Set([rootId]);
 
-  // One request per subject, run together.
   const subjects = await Promise.all(
-    folders.map(async (folder) => {
-      const children = await listChildren(folder.id, " and mimeType contains 'video/'");
-      return {
+    files
+      .filter((f) => f.mimeType === FOLDER_MIME)
+      .map(async (folder) => ({
         id: folder.id,
-        name: folder.name,
-        videos: (children.files || []).map(toVideo),
-      };
-    }),
+        name: folder.name.trim(),
+        videos: await collectVideos(folder.id, null, 1, seen),
+      })),
   );
 
-  if (looseVideos.length) {
-    subjects.push({ id: rootId, name: 'Other', videos: looseVideos.map(toVideo) });
-  }
+  const loose = files.filter(isVideo).map((f) => toVideo(f, null));
+  if (loose.length) subjects.push({ id: rootId, name: 'Other', videos: loose });
 
-  const withVideos = subjects.filter((s) => s.videos.length > 0);
+  const withVideos = subjects
+    .map((s) => ({ ...s, videos: s.videos.filter((v) => v.id !== demoId) }))
+    .filter((s) => s.videos.length > 0);
+
   return {
     subjects: withVideos,
     totalVideos: withVideos.reduce((n, s) => n + s.videos.length, 0),
+    // Lets the setup check report which files Drive would still let a student
+    // download from inside the player.
+    downloadable: withVideos.flatMap((s) => s.videos.filter((v) => v.downloadable).map((v) => `${s.name} / ${v.name}`)),
   };
 }

@@ -5,8 +5,11 @@ import { useAuth } from '@/contexts/auth-context';
 export type CourseVideo = {
   id: string;
   name: string;
+  /** Set when a subject is split into chapter folders in Drive. */
+  chapter?: string | null;
   durationMs: number | null;
   addedAt: string | null;
+  downloadable?: boolean;
 };
 
 export type CourseSubject = {
